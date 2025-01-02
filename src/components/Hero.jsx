@@ -70,7 +70,7 @@ const Hero = () => {
 
             <button
               type="submit"
-              className="p-3 rounded-md bg-blue-500 text-white hover:bg-blue-600 border-2 border-blue-400 w-full md:w-auto"
+              className="p-3 rounded-md bg-blue-500 text-white hover:bg-blue-600 border-2 border-blue-400 w-full md:w-auto transition duration-300 ease-in-out transform hover:scale-105"
             >
               Search
             </button>

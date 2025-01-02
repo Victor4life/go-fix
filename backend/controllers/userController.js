@@ -61,45 +61,36 @@ class UserController {
         availability,
         contact,
         location,
+        businessName,
+        serviceType,
+        phoneNumber, // Add this
       } = req.body;
 
-      // Validate role if it's being updated
-      if (role && !["provider", "seeker"].includes(role)) {
-        return res.status(400).json({
-          success: false,
-          message: "Invalid role specified",
-        });
-      }
-
-      // Build update object based on user role
+      // Build update object
       let updateData = {
-        name,
+        username: name, // Map name to username
         email,
-        role: role || "provider", // Default to provider if not specified
-        contact,
-        location,
+        businessName, // Add at root level
+        serviceType, // Add at root level
+        profile: {
+          // Nest these fields under profile
+          phone: phoneNumber,
+          location,
+          experience,
+          availability,
+          businessName, // Also include in profile
+          serviceType, // Also include in profile
+        },
       };
 
-      // Add role-specific fields
-      if (role === "provider" || (!role && req.user.role === "provider")) {
-        updateData = {
-          ...updateData,
-          skills,
-          experience,
-          hourlyRate,
-          availability,
-        };
-      } else if (role === "seeker" || (!role && req.user.role === "seeker")) {
-        updateData = {
-          ...updateData,
-          company,
-          industry,
-          projectDescription,
-          budget,
-        };
-      }
+      // Remove undefined fields from profile
+      Object.keys(updateData.profile).forEach(
+        (key) =>
+          updateData.profile[key] === undefined &&
+          delete updateData.profile[key]
+      );
 
-      // Remove undefined fields
+      // Remove undefined fields from root
       Object.keys(updateData).forEach(
         (key) => updateData[key] === undefined && delete updateData[key]
       );
@@ -117,24 +108,24 @@ class UserController {
         });
       }
 
+      // Format the response to match the expected structure
       res.json({
         success: true,
         message: "Profile updated successfully",
-        user: {
+        profile: {
           _id: user._id,
           username: user.username,
           email: user.email,
           role: user.role,
-          company: user.company,
-          industry: user.industry,
-          projectDescription: user.projectDescription,
-          budget: user.budget,
-          skills: user.skills,
-          experience: user.experience,
-          hourlyRate: user.hourlyRate,
-          availability: user.availability,
-          contact: user.contact,
-          location: user.location,
+          businessName: user.businessName,
+          serviceType: user.serviceType,
+          profile: {
+            phone: user.profile?.phone,
+            location: user.profile?.location,
+            experience: user.profile?.experience,
+            availability: user.profile?.availability,
+            skills: user.profile?.skills || [],
+          },
           createdAt: user.createdAt,
           updatedAt: user.updatedAt,
         },

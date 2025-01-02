@@ -20,6 +20,15 @@ export const AuthProvider = ({ children }) => {
         },
       });
 
+      console.log("Auth check response status:", response.status);
+
+      //401 error
+      if (response.status === 401) {
+        setUser(null);
+        setLoading(false);
+        return;
+      }
+
       // Checks if the response is ok
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);

@@ -19,7 +19,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: [true, "Password is required"],
       minlength: [8, "Password must be at least 8 characters"],
-      select: false, // Won't include password in queries by default
+      select: false,
     },
     name: {
       type: String,
@@ -37,83 +37,38 @@ const userSchema = new mongoose.Schema(
       required: true,
       default: "provider",
     },
-    // Provider specific fields
-    skills: [
-      {
+    profile: {
+      phone: {
         type: String,
         trim: true,
-        required: function () {
-          return this.role === "provider";
+      },
+      location: {
+        type: String,
+        trim: true,
+      },
+      businessName: {
+        type: String,
+        trim: true,
+      },
+      serviceType: {
+        type: String,
+        trim: true,
+      },
+      experience: {
+        type: String,
+        trim: true,
+      },
+      availability: {
+        type: String,
+        trim: true,
+      },
+      skills: [
+        {
+          type: String,
+          trim: true,
         },
-        validate: {
-          validator: function (value) {
-            return value.length > 0;
-          },
-          message: "At least one skill is required for providers",
-        },
-      },
-    ],
-    experience: {
-      type: String,
-      required: function () {
-        return this.role === "provider";
-      },
-      trim: true,
-      minlength: [10, "Experience description must be at least 10 characters"],
+      ],
     },
-    hourlyRate: {
-      type: Number,
-      required: function () {
-        return this.role === "provider";
-      },
-      min: [0, "Hourly rate cannot be negative"],
-      validate: {
-        validator: Number.isInteger,
-        message: "Hourly rate must be a whole number",
-      },
-    },
-    availability: {
-      type: String,
-      required: function () {
-        return this.role === "provider";
-      },
-      enum: {
-        values: ["full-time", "part-time", "contract", "flexible"],
-        message: "Invalid availability option",
-      },
-    },
-    // Seeker specific fields
-    company: {
-      type: String,
-      required: function () {
-        return this.role === "seeker";
-      },
-      trim: true,
-      minlength: [2, "Company name must be at least 2 characters"],
-    },
-    industry: {
-      type: String,
-      required: function () {
-        return this.role === "seeker";
-      },
-      trim: true,
-    },
-    projectDescription: {
-      type: String,
-      required: function () {
-        return this.role === "seeker";
-      },
-      trim: true,
-      minlength: [20, "Project description must be at least 20 characters"],
-    },
-    budget: {
-      type: Number,
-      required: function () {
-        return this.role === "seeker";
-      },
-      min: [0, "Budget cannot be negative"],
-    },
-    // Common fields
     profileComplete: {
       type: Boolean,
       default: false,
@@ -137,11 +92,42 @@ const userSchema = new mongoose.Schema(
     resetPasswordExpire: Date,
   },
   {
-    timestamps: true, // Automatically handle updatedAt
+    timestamps: true,
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
   }
 );
+
+// userSchema methods
+userSchema.methods.updateProfile = async function (updateData) {
+  // Direct field updates
+  if (updateData.username) this.name = updateData.username;
+  if (updateData.email) this.email = updateData.email;
+
+  // Handle nested profile data
+  if (updateData.profile) {
+    if (!this.profile) {
+      this.profile = {};
+    }
+
+    // Update profile fields
+    this.profile = {
+      ...this.profile,
+      phone: updateData.profile.phone || this.profile.phone,
+      location: updateData.profile.location || this.profile.location,
+      businessName:
+        updateData.profile.businessName || this.profile.businessName,
+      serviceType: updateData.profile.serviceType || this.profile.serviceType,
+      experience: updateData.profile.experience || this.profile.experience,
+      availability:
+        updateData.profile.availability || this.profile.availability,
+      skills: updateData.profile.skills || this.profile.skills || [],
+    };
+  }
+
+  this.updatedAt = Date.now();
+  return await this.save();
+};
 
 // Indexes for better query performance
 userSchema.index({ email: 1 });
@@ -164,18 +150,14 @@ userSchema.pre("save", async function (next) {
 userSchema.pre("save", function (next) {
   if (this.role === "provider") {
     this.profileComplete = !!(
-      this.skills.length &&
-      this.experience &&
-      this.hourlyRate &&
-      this.availability
+      this.profile?.businessName &&
+      this.profile?.serviceType &&
+      this.profile?.experience &&
+      this.profile?.availability
     );
-  } else if (this.role === "seeker") {
-    this.profileComplete = !!(
-      this.company &&
-      this.industry &&
-      this.projectDescription &&
-      this.budget
-    );
+  } else {
+    // For seekers or other roles
+    this.profileComplete = !!(this.name && this.email && this.profile?.phone);
   }
   next();
 });

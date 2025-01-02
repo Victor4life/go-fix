@@ -90,7 +90,7 @@ const index = () => {
 
           {/* Contact Info Section */}
           <div className="relative rounded-2xl overflow-hidden shadow-2xl transform transition-all duration-300">
-            <div className="relative z-10 p-8 backdrop-blur-sm bg-indigo-600 h-full">
+            <div className="relative z-10 p-8 backdrop-blur-sm bg-blue-600 h-full">
               <h3 className="text-2xl font-bold mb-6 text-white">
                 Contact Information
               </h3>
@@ -104,7 +104,7 @@ const index = () => {
                   <span>+000-0000000</span>
                 </p>
                 <p className="flex items-center space-x-4">
-                  <span className="text-lg">📍</span>
+                  <span className="text-lg">🌍</span>
                   <span>5, XYZ Street, City, Country</span>
                 </p>
               </div>

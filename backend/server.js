@@ -84,6 +84,8 @@ const userSchema = new mongoose.Schema(
       availability: String,
       phone: String,
       location: String,
+      businessName: String,
+      serviceType: String,
     },
   },
   { timestamps: true }
@@ -94,7 +96,12 @@ const User = mongoose.model("User", userSchema);
 // Authentication Middleware
 const authenticateToken = async (req, res, next) => {
   try {
+    console.log("Cookies:", req.cookies);
+    console.log("Authorization header:", req.headers.authorization);
+
     const token = req.cookies.token || req.headers.authorization?.split(" ")[1];
+
+    console.log("Token found:", !!token);
 
     if (!token) {
       return res.status(401).json({
@@ -104,7 +111,10 @@ const authenticateToken = async (req, res, next) => {
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    console.log("Token decoded:", decoded);
+
     const user = await User.findById(decoded.userId).select("-password");
+    console.log("User found:", !!user);
 
     if (!user) {
       return res.status(401).json({
@@ -116,6 +126,7 @@ const authenticateToken = async (req, res, next) => {
     req.user = user;
     next();
   } catch (error) {
+    console.error("Auth error:", error);
     return res.status(401).json({
       success: false,
       message: "Invalid token",
@@ -164,14 +175,25 @@ mongoose.connection.on("connected", () => {
 });
 
 // Routes
+// Update the signup route in server.js
 app.post("/api/auth/signup", async (req, res) => {
   try {
-    const { username, email, password } = req.body;
+    const {
+      username,
+      email,
+      password,
+      phoneNumber,
+      address,
+      businessName,
+      serviceType,
+      experience,
+      availability,
+    } = req.body;
 
     if (!username || !email || !password) {
       return res.status(400).json({
         success: false,
-        message: "All fields are required",
+        message: "All required fields must be provided",
       });
     }
 
@@ -192,6 +214,16 @@ app.post("/api/auth/signup", async (req, res) => {
       username,
       email,
       password: hashedPassword,
+      profile: {
+        phone: phoneNumber,
+        location: address,
+        skills: [],
+        experience: experience,
+        hourlyRate: 0,
+        availability: availability,
+        businessName: businessName,
+        serviceType: serviceType,
+      },
     });
 
     await user.save();
@@ -263,6 +295,58 @@ app.post("/api/auth/login", async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Error during login",
+      error: error.message,
+    });
+  }
+});
+
+// Generic Profile Routes
+app.get("/api/profile", authenticateToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select("-password");
+    res.json({
+      success: true,
+      profile: user,
+    });
+  } catch (error) {
+    console.error("Profile fetch error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error fetching profile",
+      error: error.message,
+    });
+  }
+});
+
+app.put("/api/profile", authenticateToken, async (req, res) => {
+  try {
+    const updates = {
+      "profile.phone": req.body.phoneNumber,
+      "profile.location": req.body.address,
+      "profile.experience": req.body.experience,
+      "profile.availability": req.body.availability,
+      "profile.skills": req.body.skills || [],
+      "profile.hourlyRate": req.body.hourlyRate,
+      "profile.businessName": req.body.businessName,
+      "profile.serviceType": req.body.serviceType,
+    };
+
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      { $set: updates },
+      { new: true }
+    ).select("-password");
+
+    res.json({
+      success: true,
+      message: "Profile updated successfully",
+      profile: user,
+    });
+  } catch (error) {
+    console.error("Profile update error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error updating profile",
       error: error.message,
     });
   }
@@ -367,53 +451,8 @@ app.put("/api/auth/update-role", authenticateToken, async (req, res) => {
   }
 });
 
-// Test route
-app.get("/", (req, res) => {
-  res.json({ message: "API is running" });
-});
-
-// 404 handler
-app.use((req, res) => {
-  res.status(404).json({
-    success: false,
-    message: "Route not found",
-  });
-});
-
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error("Error:", err);
-  res.status(err.status || 500).json({
-    success: false,
-    message: "Internal Server Error",
-    error: process.env.NODE_ENV === "development" ? err.message : undefined,
-  });
-});
-
-// Handle application termination
-process.on("SIGINT", async () => {
-  try {
-    await mongoose.connection.close();
-    console.log("MongoDB connection closed through app termination");
-    process.exit(0);
-  } catch (err) {
-    console.error("Error closing MongoDB connection:", err);
-    process.exit(1);
-  }
-});
-
-// Start server
+// Start the server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
-
-// Handle unhandled promise rejections
-process.on("unhandledRejection", (err) => {
-  console.error("Unhandled Promise Rejection:", err);
-});
-
-// Handle uncaught exceptions
-process.on("uncaughtException", (err) => {
-  console.error("Uncaught Exception:", err);
+  console.log(`Server is running on port ${PORT}`);
 });

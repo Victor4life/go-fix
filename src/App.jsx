@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import NavBar from "./components/NavBar";
 import Footer from "./components/Footer";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 // Page imports
 import Home from "./pages/Home";
@@ -57,17 +58,19 @@ function App() {
             <Route
               path="/profile/*"
               element={
-                <ProtectedRoute>
-                  <Routes>
-                    <Route
-                      path="provider"
-                      element={<ServiceProviderProfile />}
-                    />
-                    <Route path="seeker" element={<ServiceSeekerProfile />} />
-                    {/* Using the new ProfileRedirect component */}
-                    <Route path="user" element={<ProfileRedirect />} />
-                  </Routes>
-                </ProtectedRoute>
+                <ErrorBoundary>
+                  <ProtectedRoute>
+                    <Routes>
+                      <Route
+                        path="provider"
+                        element={<ServiceProviderProfile />}
+                      />
+                      <Route path="seeker" element={<ServiceSeekerProfile />} />
+                      {/* Using the new ProfileRedirect component */}
+                      <Route path="user" element={<ProfileRedirect />} />
+                    </Routes>
+                  </ProtectedRoute>
+                </ErrorBoundary>
               }
             />
 

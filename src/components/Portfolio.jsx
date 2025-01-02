@@ -1,5 +1,4 @@
 import React from "react";
-import { FaShield, FaCheck } from "react-icons/fa6";
 
 const Portfolio = () => {
   const features = [
@@ -26,50 +25,59 @@ const Portfolio = () => {
   ];
 
   return (
-    <section className="container mx-auto relative overflow-hidden px-4 lg:px-14 py-8 lg:py-10">
-      <div
-        className="absolute bottom-0 right-0 w-[500px] h-[400px] translate-x-1/4 translate-y-1/4"
-        style={{
-          background: "rgba(0, 0, 255, 0.5)",
-          borderRadius: "60% 40% 30% 50% / 60% 30% 50% 40%",
-        }}
-      />
-
-      <div className="mx-auto max-w-7xl">
-        <div className="flex flex-col lg:flex-row justify-between items-center gap-8">
-          <div className="w-full lg:w-2/3">
-            <h2 className="font-bold text-3xl mb-6">
-              Why Choose, <span className="text-blue-500">Go-Fix.</span>
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <section className="bg-white py-16">
+      <div className="container mx-auto px-4 lg:px-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start max-w-7xl mx-auto">
+          {/* Left Column - Content and Features */}
+          <div className="space-y-12">
+            {/* Heading Section */}
+            <div>
+              <h2 className="text-3xl font-bold mb-4 text-center">
+                Why Choose
+                <span className="text-blue-500 relative"> Go-Fix</span>
+              </h2>
+              <p className="text-gray-600 text-md text-center">
+                Experience excellence in every service we provide
+              </p>
+            </div>
+            {/* Features */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {features.map((feature) => (
                 <div
+                  className="relative flex items-start space-x-4"
                   key={feature.id}
-                  className="flex items-start space-x-3 p-4 rounded-lg hover:bg-gray-50 transition-all duration-300"
                 >
-                  <div className="mt-1 text-xl lg:text-2xl">
-                    <FaCheck className="bg-blue-500 text-white px-2 py-2 rounded-full hover:bg-blue-600 transition-colors" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-lg mb-2">
+                  <span className="absolute left-0 top-1/2 -translate-y-1/2 text-blue-200 text-[5rem] font-light z-10 opacity-50">
+                    {feature.id.toString().padStart(2, "0")}
+                  </span>
+                  <div className="flex-grow relative z-10">
+                    <h3 className="font-semibold text-xl mb-2 text-gray-800">
                       {feature.title}
                     </h3>
-                    <p className="text-gray-600 text-sm">
+                    <p className="text-gray-700 leading-relaxed">
                       {feature.description}
                     </p>
                   </div>
                 </div>
               ))}
             </div>
+            <div className="absolute z-0 overflow-hidden">
+              <img
+                src="images/kite2.png"
+                alt=""
+                className="object-cover w-full h-full opacity-1"
+              />
+            </div>
           </div>
 
-          <div className="w-full lg:w-1/3 flex justify-center items-center">
-            <div className="relative">
-              <div className="absolute -inset-1 bg-blue-100 rounded-full blur-lg opacity-70"></div>
-              <div className="relative bg-white p-8 rounded-full shadow-lg">
-                <FaShield className="text-blue-500 text-6xl lg:text-8xl" />
-              </div>
-            </div>
+          {/* Right Column - Image */}
+          <div className="relative -space-y-12">
+            <img
+              src="images/service_v3-1.png"
+              alt="Professional experts at work"
+              className="w-full object-contain"
+              loading="lazy"
+            />
           </div>
         </div>
       </div>
