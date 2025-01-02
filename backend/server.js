@@ -320,22 +320,36 @@ app.get("/api/profile", authenticateToken, async (req, res) => {
 
 app.put("/api/profile", authenticateToken, async (req, res) => {
   try {
+    console.log("Received update data:", req.body); // Debug incoming data
+
+    // First, get the current user data
+    const currentUser = await User.findById(req.user._id);
+
+    // Prepare the update object, maintaining existing values if not provided
     const updates = {
-      "profile.phone": req.body.phoneNumber,
-      "profile.location": req.body.address,
-      "profile.experience": req.body.experience,
-      "profile.availability": req.body.availability,
-      "profile.skills": req.body.skills || [],
-      "profile.hourlyRate": req.body.hourlyRate,
-      "profile.businessName": req.body.businessName,
-      "profile.serviceType": req.body.serviceType,
+      username: req.body.username || currentUser.username,
+      email: req.body.email || currentUser.email,
+      profile: {
+        ...currentUser.profile.toObject(), // Preserve existing profile data
+        phone: req.body.phoneNumber || currentUser.profile.phone,
+        location: req.body.address || currentUser.profile.location,
+        experience: req.body.experience || currentUser.profile.experience,
+        availability: req.body.availability || currentUser.profile.availability,
+        skills: req.body.skills || currentUser.profile.skills,
+        hourlyRate: req.body.hourlyRate || currentUser.profile.hourlyRate,
+        businessName: req.body.businessName || currentUser.profile.businessName,
+        serviceType: req.body.serviceType || currentUser.profile.serviceType,
+      },
     };
 
-    const user = await User.findByIdAndUpdate(
-      req.user._id,
-      { $set: updates },
-      { new: true }
-    ).select("-password");
+    console.log("Update object to be applied:", updates); // Debug update object
+
+    const user = await User.findByIdAndUpdate(req.user._id, updates, {
+      new: true,
+      runValidators: true,
+    }).select("-password");
+
+    console.log("Updated user object:", user); // Debug resulting user object
 
     res.json({
       success: true,

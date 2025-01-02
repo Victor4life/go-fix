@@ -68,16 +68,14 @@ const ServiceSeekerProfile = () => {
       const updateData = {
         username: profileData.name,
         email: profileData.email,
-        profile: {
-          phone: profileData.phoneNumber,
-          location: profileData.address,
-          businessName: profileData.businessName,
-          serviceType: profileData.serviceType,
-          experience: profileData.experience,
-          availability: profileData.availability,
-          skills: [],
-          hourlyRate: 0,
-        },
+        phoneNumber: profileData.phoneNumber,
+        address: profileData.address,
+        businessName: profileData.businessName, // Add this line
+        serviceType: profileData.serviceType, // Add this line
+        experience: profileData.experience,
+        availability: profileData.availability,
+        skills: [],
+        hourlyRate: 0,
       };
 
       console.log("Sending update data:", updateData);
