@@ -15,7 +15,7 @@ const index = () => {
           Get in Touch
         </h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-0 items-center">
           {/* Form Section */}
           <div className="backdrop-blur-sm bg-white/80 p-8 rounded-2xl shadow-2xl transform hover:scale-105 transition-all duration-300">
             <form className="space-y-6">
@@ -89,27 +89,38 @@ const index = () => {
           </div>
 
           {/* Contact Info Section */}
-          <div className="relative rounded-2xl overflow-hidden shadow-2xl transform transition-all duration-300">
-            <div className="relative z-10 p-8 backdrop-blur-sm bg-blue-600 h-full">
-              <h3 className="text-2xl font-bold mb-6 text-white">
-                Contact Information
-              </h3>
-              <div className="space-y-6 text-white">
-                <p className="flex items-center space-x-4">
-                  <span className="text-lg">📧</span>
-                  <span>contact@example.com</span>
-                </p>
-                <p className="flex items-center space-x-4">
-                  <span className="text-lg">📱</span>
-                  <span>+000-0000000</span>
-                </p>
-                <p className="flex items-center space-x-4">
-                  <span className="text-lg">🌍</span>
-                  <span>5, XYZ Street, City, Country</span>
-                </p>
+          <div
+            className="relative rounded-2xl overflow-hidden shadow-2xl h-full flex flex-col justify-between"
+            style={{
+              backgroundImage: 'url("images/contact.png")',
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              backgroundRepeat: "no-repeat",
+            }}
+          >
+            {/* Add a darker overlay to make text more visible */}
+            <div className="relative z-10 p-8 bg-black/60 h-full flex flex-col">
+              <div>
+                <h3 className="text-2xl font-bold mb-6 text-white">
+                  Contact Information
+                </h3>
+                <div className="space-y-6 text-white">
+                  <p className="flex items-center space-x-4">
+                    <span className="text-lg">📧</span>
+                    <span>contact@example.com</span>
+                  </p>
+                  <p className="flex items-center space-x-4">
+                    <span className="text-lg">📱</span>
+                    <span>+000-0000000</span>
+                  </p>
+                  <p className="flex items-center space-x-4">
+                    <span className="text-lg">🌍</span>
+                    <span>5, XYZ Street, City, Country</span>
+                  </p>
+                </div>
               </div>
 
-              <div className="mt-8">
+              <div className="mt-auto pt-8">
                 <h4 className="text-xl font-semibold mb-4 text-white">
                   Follow Us
                 </h4>

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { FaUser } from "react-icons/fa";
 
 const NavBar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -117,12 +118,12 @@ const NavBar = () => {
                 <div>
                   <button
                     type="button"
-                    className="flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    className="flex items-center text-sm rounded-full focus:outline-none ring-1 ring-offset-1 ring-blue-500 focus:ring-2 focus:ring-offset-2"
                     onClick={() => setIsProfileOpen(!isProfileOpen)}
                   >
                     <span className="sr-only">Open user menu</span>
                     <div className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center text-white">
-                      {user.name ? user.name[0].toUpperCase() : "Me"}
+                      {user.name ? user.name[0].toUpperCase() : <FaUser />}
                     </div>
                   </button>
                 </div>
@@ -144,7 +145,7 @@ const NavBar = () => {
                       >
                         Profile
                       </Link>
-                      <button
+                      {/*<button
                         onClick={handleReAuthenticate}
                         className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                       >
@@ -157,7 +158,7 @@ const NavBar = () => {
                         >
                           Become Provider
                         </button>
-                      )}
+                      )}*/}
                       <button
                         onClick={handleLogout}
                         className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"

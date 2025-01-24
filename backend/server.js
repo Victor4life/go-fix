@@ -6,6 +6,7 @@ const cookieParser = require("cookie-parser");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const rateLimit = require("express-rate-limit");
+const { sendWelcomeEmail, sendAdminNotification } = require("./emailService");
 
 const app = express();
 
@@ -228,6 +229,28 @@ app.post("/api/auth/signup", async (req, res) => {
 
     await user.save();
 
+    // Send welcome email to user and notification to admin
+    const emailResults = await Promise.allSettled([
+      sendWelcomeEmail(email, username),
+      sendAdminNotification({
+        username,
+        email,
+        phoneNumber,
+        businessName,
+        serviceType,
+        address,
+      }),
+    ]);
+
+    // Check email sending results
+    emailResults.forEach((result, index) => {
+      if (result.status === "rejected") {
+        console.error(
+          `Failed to send ${index === 0 ? "welcome" : "admin"} email:`,
+          result.reason
+        );
+      }
+    });
     res.status(201).json({
       success: true,
       message: "User created successfully",

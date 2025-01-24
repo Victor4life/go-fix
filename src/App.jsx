@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -12,10 +12,11 @@ import Login from "./pages/auth/Login";
 import Signup from "./pages/auth/Signup";
 import Dashboard from "./pages/Dashboard";
 import ServiceProviderProfile from "./pages/Profiles/ServiceProviderProfile";
-import ServiceSeekerProfile from "./pages/Profiles/ServiceSeekerprofile";
+import ServiceSeekerProfile from "./pages/Profiles/ServiceSeekerProfile";
 import Services from "./pages/Service";
 import Contact from "./pages/Contact";
 import Blog from "./pages/Blog";
+import Settings from "./pages/Settings";
 
 // Create a new component for the profile redirect
 function ProfileRedirect() {
@@ -29,11 +30,26 @@ function ProfileRedirect() {
 }
 
 function App() {
+  const location = useLocation();
+
+  const noNavFooterPaths = [
+    "/login",
+    "/signup",
+    "/dashboard",
+    "/profile/provider",
+    "/profile/seeker",
+    "/profile/user",
+    "/settings",
+  ];
+
+  const shouldHideNavFooter = noNavFooterPaths.some((path) =>
+    location.pathname.startsWith(path)
+  );
   return (
     <AuthProvider>
       <div className="flex flex-col min-h-screen">
         <Toaster position="top-center" reverseOrder={false} />
-        <NavBar />
+        {!shouldHideNavFooter && <NavBar />}
         <main className="flex-grow">
           <Routes>
             {/* Public Routes */}
@@ -50,6 +66,16 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+
+            {/*Settings Route */}
+            <Route
+              path="/settings"
+              element={
+                <ProtectedRoute>
+                  <Settings />
                 </ProtectedRoute>
               }
             />
@@ -98,7 +124,7 @@ function App() {
             />
           </Routes>
         </main>
-        <Footer />
+        {!shouldHideNavFooter && <Footer />}
       </div>
     </AuthProvider>
   );
