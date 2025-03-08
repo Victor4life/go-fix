@@ -17,7 +17,7 @@ const index = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-0 items-center">
           {/* Form Section */}
-          <div className="backdrop-blur-sm bg-white/80 p-8 rounded-2xl shadow-2xl transform hover:scale-105 transition-all duration-300">
+          <div className="backdrop-blur-sm bg-white/80 p-8 rounded-2xl shadow-2xl">
             <form className="space-y-6">
               <div>
                 <label
@@ -90,7 +90,7 @@ const index = () => {
 
           {/* Contact Info Section */}
           <div
-            className="relative rounded-2xl overflow-hidden shadow-2xl h-full flex flex-col justify-between"
+            className="relative rounded-2xl overflow-hidden shadow-2xl h-full flex flex-col justify-between bg-blue-700"
             style={{
               backgroundImage: 'url("images/contact.png")',
               backgroundSize: "cover",
@@ -99,7 +99,7 @@ const index = () => {
             }}
           >
             {/* Add a darker overlay to make text more visible */}
-            <div className="relative z-10 p-8 bg-black/60 h-full flex flex-col">
+            <div className="relative z-10 p-8 bg-black/30 h-full flex flex-col">
               <div>
                 <h3 className="text-2xl font-bold mb-6 text-white">
                   Contact Information

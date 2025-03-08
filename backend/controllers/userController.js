@@ -1,6 +1,106 @@
 const User = require("../models/User");
+const bcrypt = require("bcrypt");
+const crypto = require("crypto");
+const { sendWelcomeEmail } = require("../services/emailService");
 
 class UserController {
+  // Register new user
+  static async register(req, res) {
+    try {
+      const { email, password, name } = req.body;
+
+      // Validate input
+      if (!email || !password || !name) {
+        return res.status(400).json({
+          success: false,
+          message: "All fields are required",
+        });
+      }
+
+      // Check if user already exists
+      const existingUser = await User.findOne({ email });
+      if (existingUser) {
+        return res.status(400).json({
+          success: false,
+          message: "Email already registered",
+        });
+      }
+
+      // Hash password
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      // Generate verification token
+      const verificationToken = crypto.randomBytes(32).toString("hex");
+      const tokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+      // Create user
+      const newUser = await User.create({
+        email,
+        password: hashedPassword,
+        username: name,
+        verificationToken,
+        tokenExpiry,
+        isVerified: false,
+        role: "provider", // default role, can be changed later
+      });
+
+      // Send welcome email
+      await sendWelcomeEmail(email, name, verificationToken);
+
+      res.status(201).json({
+        success: true,
+        message:
+          "Registration successful. Please check your email to verify your account.",
+        userId: newUser._id,
+      });
+    } catch (error) {
+      console.error("Registration error:", error);
+      res.status(500).json({
+        success: false,
+        message: "Registration failed",
+        error: error.message,
+      });
+    }
+  }
+
+  // Verify email
+  static async verifyEmail(req, res) {
+    try {
+      const { token } = req.params;
+
+      const user = await User.findOne({
+        verificationToken: token,
+        tokenExpiry: { $gt: Date.now() },
+      });
+
+      if (!user) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid or expired verification token",
+        });
+      }
+
+      // Update user verification status
+      user.isVerified = true;
+      user.verificationToken = undefined;
+      user.tokenExpiry = undefined;
+      await user.save();
+
+      res.json({
+        success: true,
+        message: "Email verified successfully",
+        redirectUrl: "/login",
+      });
+    } catch (error) {
+      console.error("Verification error:", error);
+      res.status(500).json({
+        success: false,
+        message: "Verification failed",
+        error: error.message,
+      });
+    }
+  }
+
   // Get user profile
   static async getProfile(req, res) {
     try {

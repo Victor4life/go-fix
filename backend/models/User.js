@@ -21,6 +21,18 @@ const userSchema = new mongoose.Schema(
       minlength: [8, "Password must be at least 8 characters"],
       select: false,
     },
+    verificationToken: {
+      type: String,
+      select: false, // Hide from query results
+    },
+    tokenExpiry: {
+      type: Date,
+      select: false, // Hide from query results
+    },
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
     name: {
       type: String,
       required: [true, "Name is required"],
@@ -98,6 +110,20 @@ const userSchema = new mongoose.Schema(
   }
 );
 
+// Add this method for email verification
+userSchema.methods.createVerificationToken = function () {
+  const verificationToken = crypto.randomBytes(32).toString("hex");
+
+  this.verificationToken = crypto
+    .createHash("sha256")
+    .update(verificationToken)
+    .digest("hex");
+
+  this.tokenExpiry = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
+
+  return verificationToken;
+};
+
 // userSchema methods
 userSchema.methods.updateProfile = async function (updateData) {
   // Direct field updates
@@ -153,14 +179,27 @@ userSchema.pre("save", function (next) {
       this.profile?.businessName &&
       this.profile?.serviceType &&
       this.profile?.experience &&
-      this.profile?.availability
+      this.profile?.availability &&
+      this.isVerified
     );
   } else {
     // For seekers or other roles
-    this.profileComplete = !!(this.name && this.email && this.profile?.phone);
+    this.profileComplete = !!(
+      this.name &&
+      this.email &&
+      this.profile?.phone &&
+      this.isVerified
+    );
   }
   next();
 });
+
+// Add a method to verify email
+userSchema.methods.verifyEmail = function () {
+  this.isVerified = true;
+  this.verificationToken = undefined;
+  this.tokenExpiry = undefined;
+};
 
 // Method to compare password
 userSchema.methods.comparePassword = async function (candidatePassword) {

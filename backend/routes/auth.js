@@ -10,7 +10,7 @@ router.get("/check", AuthController.checkAuth);
 router.post("/login", AuthController.login);
 router.post("/signup", AuthController.signup);
 router.post("/logout", AuthController.logout);
-
+router.get("/verify/:token", UserController.verifyEmail);
 // User routes
 router.get("/profile", auth, UserController.getProfile);
 router.put("/profile", auth, UserController.updateProfile);

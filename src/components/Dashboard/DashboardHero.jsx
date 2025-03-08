@@ -49,8 +49,11 @@ const DashboardHero = ({ userData, isLoading }) => {
           {" "}
           <h1 className="text-2xl md:text-3xl font-bold">
             {" "}
-            Hi,{" "}
-            <span className="text-blue-100">{userData.name || "Emeka"}</span> 👋
+            Hello,{" "}
+            <span className="text-blue-100">
+              {userData.name || "Artisan!"}
+            </span>{" "}
+            👋
           </h1>
           <p className="text-md text-blue-50 leading-relaxed">
             {" "}

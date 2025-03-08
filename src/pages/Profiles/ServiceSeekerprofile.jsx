@@ -179,7 +179,7 @@ const ServiceSeekerProfile = () => {
       </aside>
       <main className="flex-1 transition-all duration-300 py-6 px-4 min-h-screen relative overflow-hidden">
         <div className="max-w-md mx-auto py-16">
-          <h2 className="text-3xl font-bold text-center mb-6">
+          <h2 className="text-2xl md:text-3xl font-bold text-center mb-6">
             My Service <span className="text-blue-500">Profile</span>
           </h2>
           {error && (

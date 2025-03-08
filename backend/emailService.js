@@ -32,20 +32,45 @@ const sendEmailWithRetry = async (mailOptions, retries = 3) => {
 };
 
 // Send welcome email to user
-const sendWelcomeEmail = async (userEmail, username) => {
+const sendWelcomeEmail = async (userEmail, username, verificationToken) => {
   try {
-    if (!userEmail || !username) {
-      throw new Error("Email and username are required");
+    if (!userEmail || !username || !verificationToken) {
+      throw new Error("Email, username, and verification token are required");
     }
+
+    // Use your existing frontend URL
+    const verificationUrl = `http://localhost:3000/verify/${verificationToken}`;
 
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: userEmail,
-      subject: "Welcome to Our Service!",
+      subject: "Welcome - Please Verify Your Email",
       html: `
-        <h1>Welcome ${username}!</h1>
-        <p>Thank you for registering with our service. We're excited to have you on board!</p>
-        <p>You can now start using our platform to connect with customers.</p>
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h1 style="color: #333;">Welcome ${username}!</h1>
+          <p>Thank you for registering with our service. We're excited to have you on board!</p>
+          
+          <div style="margin: 25px 0;">
+            <p>Please verify your email address by clicking the button below:</p>
+            <a href="${verificationUrl}" 
+               style="background-color: #4CAF50; 
+                      color: white; 
+                      padding: 12px 25px; 
+                      text-decoration: none; 
+                      display: inline-block; 
+                      border-radius: 4px;">
+              Verify Email Address
+            </a>
+          </div>
+          
+          <p>Or copy and paste this link in your browser:</p>
+          <p style="color: #666;">${verificationUrl}</p>
+          
+          <p style="color: #666; font-size: 14px;">
+            This verification link will expire in 24 hours.
+            If you didn't create this account, please ignore this email.
+          </p>
+        </div>
       `,
     };
 
@@ -83,7 +108,28 @@ const sendAdminNotification = async (newUserData) => {
   }
 };
 
+// Test function
+const testEmailService = async () => {
+  try {
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: process.env.ADMIN_EMAIL,
+      subject: "Test Email",
+      html: "<h1>Test Email</h1><p>This is a test email to verify the configuration</p>",
+    };
+
+    const info = await sendEmailWithRetry(mailOptions);
+    console.log("Test email sent successfully:", info);
+    return true;
+  } catch (error) {
+    console.error("Error in test email:", error);
+    return false;
+  }
+};
+
+// Add this to your exports
 module.exports = {
   sendWelcomeEmail,
   sendAdminNotification,
+  testEmailService, // Add this line
 };

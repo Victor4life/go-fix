@@ -59,7 +59,7 @@ const DashboardSideBar = () => {
               flex items-center px-4 py-3 transition-colors
               ${
                 location.pathname === item.path
-                  ? "mx-2 rounded-lg bg-gradient-to-r from-indigo-600 to-blue-500 text-white font-medium shadow-lg hover:shadow-xl"
+                  ? "mx-2 px-1 rounded-lg bg-gradient-to-r from-indigo-600 to-blue-500 text-white font-medium shadow-lg hover:shadow-xl"
                   : "text-gray-600 hover:bg-gray-100"
               }
             `}
