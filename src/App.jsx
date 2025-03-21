@@ -12,7 +12,7 @@ import Login from "./pages/auth/Login";
 import Signup from "./pages/auth/Signup";
 import Dashboard from "./pages/Dashboard";
 import ServiceProviderProfile from "./pages/Profiles/ServiceProviderProfile";
-import ServiceSeekerProfile from "/pages/Profiles/ServiceSeekerProfile";
+import ServiceSeekerProfile from "./pages/Profiles/ServiceSeekerProfile";
 import Services from "./pages/Service";
 import Contact from "./pages/Contact";
 import Blog from "./pages/Blog";
