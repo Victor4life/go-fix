@@ -1,7 +1,8 @@
 import React from "react";
+import Blog from "./Blog";
 
-const index = () => {
-  return <div>index</div>;
+const BlogIndex = () => {
+  return <Blog />;
 };
 
-export default index;
+export default BlogIndex;

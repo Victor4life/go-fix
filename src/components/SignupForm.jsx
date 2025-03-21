@@ -5,6 +5,10 @@ const SignupForm = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  // Add these with your other useState declarations
+  const [imagePreview, setImagePreview] = useState(null);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -17,6 +21,7 @@ const SignupForm = () => {
     serviceType: "",
     experience: "",
     availability: "",
+    profileImage: null, // Add this line
   });
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -29,49 +34,73 @@ const SignupForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-
-    // Validate passwords match
-    if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match");
-      setLoading(false);
-      return;
-    }
+    setError("");
 
     try {
+      const formDataToSend = new FormData();
+
+      formDataToSend.append("username", formData.name);
+      formDataToSend.append("email", formData.email);
+      formDataToSend.append("password", formData.password);
+      formDataToSend.append("phoneNumber", formData.phoneNumber);
+      formDataToSend.append("address", formData.address);
+      formDataToSend.append("businessName", formData.businessName);
+      formDataToSend.append("serviceType", formData.serviceType);
+      formDataToSend.append("experience", formData.experience);
+      formDataToSend.append("availability", formData.availability);
+      formDataToSend.append("role", "provider");
+
+      if (formData.profileImage) {
+        formDataToSend.append("profileImage", formData.profileImage);
+      }
+
+      // Only log non-sensitive fields
+      console.log("Submitting form for:", {
+        username: formData.name,
+        serviceType: formData.serviceType,
+        hasProfileImage: !!formData.profileImage,
+      });
+
       const response = await fetch("http://localhost:5000/api/auth/signup", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({
-          username: formData.name,
-          email: formData.email,
-          password: formData.password,
-          phoneNumber: formData.phoneNumber,
-          address: formData.address,
-          businessName: formData.businessName,
-          serviceType: formData.serviceType,
-          experience: formData.experience,
-          availability: formData.availability,
-          role: "provider",
-        }),
+        body: formDataToSend,
       });
 
       const data = await response.json();
-      console.log("Signup response:", data); // Debug log
+
+      // Only log success/failure status, not the full response
+      console.log("Signup status:", response.ok ? "success" : "failed");
 
       if (response.ok) {
-        // Redirect to login page on successful signup
         navigate("/login");
       } else {
         setError(data.message || "Failed to create account");
       }
     } catch (err) {
-      console.error("Network error:", err);
+      console.error("Network error occurred");
       setError("Network error or server not responding");
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Add this with your other handler functions
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // File size validation (5MB limit)
+      if (file.size > 5 * 1024 * 1024) {
+        setError("Image size should be less than 5MB");
+        return;
+      }
+
+      setFormData((prev) => ({
+        ...prev,
+        profileImage: file,
+      }));
+
+      // Create preview URL
+      setImagePreview(URL.createObjectURL(file));
     }
   };
 
@@ -163,25 +192,113 @@ const SignupForm = () => {
               onChange={handleChange}
             />
 
-            <input
-              name="password"
-              type="password"
-              required
-              className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-              placeholder="Password"
-              value={formData.password}
-              onChange={handleChange}
-            />
+            <div className="relative">
+              <input
+                name="password"
+                type={showPassword ? "text" : "password"}
+                required
+                className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                placeholder="Password"
+                value={formData.password}
+                onChange={handleChange}
+              />
+              <button
+                type="button"
+                className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? (
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1.5}
+                    stroke="currentColor"
+                    className="w-5 h-5 text-gray-500"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88"
+                    />
+                  </svg>
+                ) : (
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1.5}
+                    stroke="currentColor"
+                    className="w-5 h-5 text-gray-500"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
+                  </svg>
+                )}
+              </button>
+            </div>
 
-            <input
-              name="confirmPassword"
-              type="password"
-              required
-              className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-              placeholder="Confirm Password"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-            />
+            <div className="relative">
+              <input
+                name="confirmPassword"
+                type={showConfirmPassword ? "text" : "password"}
+                required
+                className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                placeholder="Confirm Password"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+              />
+              <button
+                type="button"
+                className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              >
+                {showConfirmPassword ? (
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1.5}
+                    stroke="currentColor"
+                    className="w-5 h-5 text-gray-500"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88"
+                    />
+                  </svg>
+                ) : (
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={1.5}
+                    stroke="currentColor"
+                    className="w-5 h-5 text-gray-500"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
+                  </svg>
+                )}
+              </button>
+            </div>
 
             {/* Contact Information */}
             <input
@@ -194,15 +311,35 @@ const SignupForm = () => {
               onChange={handleChange}
             />
 
-            <input
+            <select
               name="address"
-              type="text"
               required
               className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-              placeholder="Business Address e.g Ketu"
               value={formData.address}
               onChange={handleChange}
-            />
+            >
+              <option value="">Select Location</option>
+              <option value="agege">Agege</option>
+              <option value="ajeromi_ifelodun">Ajeromi-Ifelodun</option>
+              <option value="alimosho">Alimosho</option>
+              <option value="amuwo_odofin">Amuwo-Odofin</option>
+              <option value="apapa">Apapa</option>
+              <option value="badagry">Badagry</option>
+              <option value="epe">Epe</option>
+              <option value="eti_osa">Eti-Osa</option>
+              <option value="ibeju_lekki">Ibeju-Lekki</option>
+              <option value="ifako_ijaiye">Ifako-Ijaiye</option>
+              <option value="ikeja">Ikeja</option>
+              <option value="ikorodu">Ikorodu</option>
+              <option value="kosofe">Kosofe</option>
+              <option value="lagos_island">Lagos Island</option>
+              <option value="lagos_mainland">Lagos Mainland</option>
+              <option value="mushin">Mushin</option>
+              <option value="ojo">Ojo</option>
+              <option value="oshodi_isolo">Oshodi-Isolo</option>
+              <option value="shomolu">Shomolu</option>
+              <option value="surulere">Surulere</option>
+            </select>
 
             {/* Business Information */}
             <input
@@ -222,11 +359,22 @@ const SignupForm = () => {
               value={formData.serviceType}
               onChange={handleChange}
             >
-              <option value="">Select a Service Type</option>
-              <option value="plumbing">Plumbing</option>
-              <option value="carpentry">Carpentry</option>
-              <option value="cleaning">Cleaning</option>
+              <option value="">Select Category</option>
+              <option value="ac-technician">AC Technician</option>
+              <option value="barber">Barber</option>
+              <option value="carpenter">Carpenter</option>
+              <option value="cleaner">Cleaner</option>
               <option value="electrician">Electrician</option>
+              <option value="gardener">Gardener</option>
+              <option value="hairdresser">Hairdresser</option>
+              <option value="handyman">Handyman</option>
+              <option value="interior-decorator">Interior Decorator</option>
+              <option value="mechanic">Mechanic</option>
+              <option value="painter">Painter</option>
+              <option value="plumber">Plumber</option>
+              <option value="security">Security Guard</option>
+              <option value="tailor">Tailor</option>
+              <option value="tiler">Tiler</option>
             </select>
 
             <input
@@ -248,6 +396,34 @@ const SignupForm = () => {
               value={formData.availability}
               onChange={handleChange}
             />
+          </div>
+          {/* Profile Image Upload */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700">
+              Profile Image
+            </label>
+            <div className="mt-1 flex items-center space-x-4">
+              {imagePreview && (
+                <div className="h-16 w-16 rounded-full overflow-hidden">
+                  <img
+                    src={imagePreview}
+                    alt="Preview"
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+              )}
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="block w-full text-sm text-gray-500
+        file:mr-4 file:py-2 file:px-4
+        file:rounded-full file:border-0
+        file:text-sm file:font-semibold
+        file:bg-blue-50 file:text-blue-700
+        hover:file:bg-blue-100"
+              />
+            </div>
           </div>
 
           <div>

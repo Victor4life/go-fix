@@ -7,8 +7,24 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const rateLimit = require("express-rate-limit");
 const { sendWelcomeEmail, sendAdminNotification } = require("./emailService");
+const path = require("path");
+const fs = require("fs");
 
 const app = express();
+
+const multer = require("multer");
+
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "uploads/"); // Make sure this directory exists
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + "-" + file.originalname);
+  },
+});
+
+const upload = multer({ storage: storage });
 
 // Rate limiting
 const limiter = rateLimit({
@@ -26,11 +42,17 @@ const corsOptions = {
   optionsSuccessStatus: 204,
 };
 
+// Add this before your middleware setup
+if (!fs.existsSync("uploads")) {
+  fs.mkdirSync("uploads");
+}
+
 // Middleware
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser());
 app.use("/api/", limiter);
+app.use("/uploads", express.static(path.join(__dirname, "uploads"))); // Add this line
 
 // Request logging middleware
 app.use((req, res, next) => {
@@ -177,93 +199,121 @@ mongoose.connection.on("connected", () => {
 
 // Routes
 // Update the signup route in server.js
-app.post("/api/auth/signup", async (req, res) => {
-  try {
-    const {
-      username,
-      email,
-      password,
-      phoneNumber,
-      address,
-      businessName,
-      serviceType,
-      experience,
-      availability,
-    } = req.body;
+app.post(
+  "/api/auth/signup",
+  upload.single("profileImage"),
+  async (req, res) => {
+    try {
+      // Only log essential non-sensitive information
+      console.log("New signup request received");
+      console.log("Service type:", req.body.serviceType);
+      console.log("Has profile image:", !!req.file);
 
-    if (!username || !email || !password) {
-      return res.status(400).json({
-        success: false,
-        message: "All required fields must be provided",
-      });
-    }
-
-    const existingUser = await User.findOne({
-      $or: [{ email }, { username }],
-    });
-
-    if (existingUser) {
-      return res.status(400).json({
-        success: false,
-        message: "User already exists",
-      });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 12);
-
-    const user = new User({
-      username,
-      email,
-      password: hashedPassword,
-      profile: {
-        phone: phoneNumber,
-        location: address,
-        skills: [],
-        experience: experience,
-        hourlyRate: 0,
-        availability: availability,
-        businessName: businessName,
-        serviceType: serviceType,
-      },
-    });
-
-    await user.save();
-
-    // Send welcome email to user and notification to admin
-    const emailResults = await Promise.allSettled([
-      sendWelcomeEmail(email, username),
-      sendAdminNotification({
+      const {
         username,
         email,
+        password,
         phoneNumber,
+        address,
         businessName,
         serviceType,
-        address,
-      }),
-    ]);
+        experience,
+        availability,
+      } = req.body;
 
-    // Check email sending results
-    emailResults.forEach((result, index) => {
-      if (result.status === "rejected") {
-        console.error(
-          `Failed to send ${index === 0 ? "welcome" : "admin"} email:`,
-          result.reason
-        );
+      // Validate required fields without logging their values
+      const missingFields = [];
+      if (!username) missingFields.push("username");
+      if (!email) missingFields.push("email");
+      if (!password) missingFields.push("password");
+      if (!phoneNumber) missingFields.push("phoneNumber");
+      if (!address) missingFields.push("address");
+      if (!businessName) missingFields.push("businessName");
+      if (!serviceType) missingFields.push("serviceType");
+      if (!experience) missingFields.push("experience");
+      if (!availability) missingFields.push("availability");
+
+      if (missingFields.length > 0) {
+        console.log("Signup failed: Missing required fields");
+        return res.status(400).json({
+          success: false,
+          message: `Missing required fields: ${missingFields.join(", ")}`,
+        });
       }
-    });
-    res.status(201).json({
-      success: true,
-      message: "User created successfully",
-    });
-  } catch (error) {
-    console.error("Signup error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Error creating user",
-      error: error.message,
-    });
+
+      const existingUser = await User.findOne({
+        $or: [{ email }, { username }],
+      });
+
+      if (existingUser) {
+        console.log("Signup failed: User already exists");
+        return res.status(400).json({
+          success: false,
+          message: "User already exists",
+        });
+      }
+
+      const hashedPassword = await bcrypt.hash(password, 12);
+
+      const user = new User({
+        username,
+        email,
+        password: hashedPassword,
+        profile: {
+          phone: phoneNumber,
+          location: address,
+          skills: [],
+          experience: experience,
+          hourlyRate: 0,
+          availability: availability,
+          businessName: businessName,
+          serviceType: serviceType,
+          profileImage: req.file ? req.file.path : null,
+        },
+      });
+
+      await user.save();
+      console.log("New user created successfully");
+
+      // Send welcome email to user and notification to admin
+      const emailResults = await Promise.allSettled([
+        sendWelcomeEmail(email, username),
+        sendAdminNotification({
+          username,
+          email,
+          phoneNumber,
+          businessName,
+          serviceType,
+          address,
+        }),
+      ]);
+
+      // Log email status without sensitive details
+      emailResults.forEach((result, index) => {
+        if (result.status === "rejected") {
+          console.error(
+            `Failed to send ${index === 0 ? "welcome" : "admin"} email`
+          );
+        }
+      });
+
+      res.status(201).json({
+        success: true,
+        message: "User created successfully",
+      });
+    } catch (error) {
+      console.error("Signup error occurred");
+      res.status(500).json({
+        success: false,
+        message: "Error creating user",
+        error:
+          process.env.NODE_ENV === "development"
+            ? "An error occurred"
+            : undefined,
+      });
+    }
   }
-});
+);
 
 app.post("/api/auth/login", async (req, res) => {
   try {

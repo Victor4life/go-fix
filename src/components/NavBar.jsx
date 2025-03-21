@@ -51,7 +51,7 @@ const NavBar = () => {
         <div className="flex justify-between h-16">
           {/* Logo Section */}
           <Link to="/" className="flex items-center" onClick={closeMenus}>
-            <span className="text-2xl font-bold text-gray-700">GoFix</span>
+            <span className="text-2xl font-bold text-gray-700 ml-2">GoFix</span>
           </Link>
 
           {/* Mobile Menu Button */}

@@ -17,6 +17,7 @@ import Services from "./pages/Service";
 import Contact from "./pages/Contact";
 import Blog from "./pages/Blog";
 import Settings from "./pages/Settings";
+import BlogPost from "./pages/Blog/BlogPost";
 
 // Create a new component for the profile redirect
 function ProfileRedirect() {
@@ -58,6 +59,7 @@ function App() {
             <Route path="/signup" element={<Signup />} />
             <Route path="/services" element={<Services />} />
             <Route path="/blog" element={<Blog />} />
+            <Route path="/blog/:slug" element={<BlogPost />} />
             <Route path="/contact" element={<Contact />} />
 
             {/* Protected Routes */}

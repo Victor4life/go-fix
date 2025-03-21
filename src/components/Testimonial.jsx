@@ -83,7 +83,7 @@ const Testimonial = () => {
               </p>
 
               {/* Achievement icons */}
-              <div className="flex flex-wrap lg:flex-row gap-8">
+              <div className="flex flex-wrap lg:flex-row gap-2 md:gap-8">
                 <div className="group cursor-pointer transform transition-all duration-300 hover:-translate-y-2">
                   <div className="relative">
                     <FaAward

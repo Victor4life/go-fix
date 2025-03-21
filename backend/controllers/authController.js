@@ -4,39 +4,65 @@ const jwt = require("jsonwebtoken");
 class AuthController {
   static async signup(req, res) {
     try {
+      // Debug logs
+      console.log("========= DEBUG START =========");
+      console.log("Headers:", req.headers);
+      console.log("Body:", req.body);
+      console.log("Files:", req.files);
+      console.log("File:", req.file);
+      console.log("Content Type:", req.headers["content-type"]);
+      console.log("========= DEBUG END =========");
+
       const {
+        name,
         email,
         password,
-        name,
-        role, // 'provider' or 'seeker'
-        // Provider specific fields
-        skills,
+        phoneNumber,
+        address,
+        businessName,
+        serviceType,
         experience,
-        hourlyRate,
         availability,
-        // Seeker specific fields
-        company,
-        industry,
-        projectDescription,
-        budget,
+        role = "provider",
       } = req.body;
 
-      // Input validation
-      if (!email || !password || !name || !role) {
+      // Log individual fields
+      console.log("Parsed fields:", {
+        name,
+        email,
+        password,
+        phoneNumber,
+        address,
+        businessName,
+        serviceType,
+        experience,
+        availability,
+        role,
+      });
+
+      // Input validation with detailed logging
+      const missingFields = [];
+      if (!name) missingFields.push("name");
+      if (!email) missingFields.push("email");
+      if (!password) missingFields.push("password");
+      if (!phoneNumber) missingFields.push("phoneNumber");
+      if (!address) missingFields.push("address");
+      if (!businessName) missingFields.push("businessName");
+      if (!serviceType) missingFields.push("serviceType");
+      if (!experience) missingFields.push("experience");
+      if (!availability) missingFields.push("availability");
+
+      if (missingFields.length > 0) {
+        console.log("Missing fields:", missingFields);
         return res.status(400).json({
           success: false,
-          message: "Required fields missing",
+          message: `All required fields must be provided. Missing: ${missingFields.join(
+            ", "
+          )}`,
         });
       }
 
-      // Validate role
-      if (!["provider", "seeker"].includes(role)) {
-        return res.status(400).json({
-          success: false,
-          message: "Invalid role specified",
-        });
-      }
-
+      // Rest of your existing code...
       // Check if user already exists
       const existingUser = await User.findOne({ email });
       if (existingUser) {
@@ -46,48 +72,20 @@ class AuthController {
         });
       }
 
-      // Create user profile based on role
-      let userProfile = {
+      // Create user profile
+      const userProfile = {
+        name,
         email,
         password,
-        name,
+        phoneNumber,
+        address,
+        businessName,
+        serviceType,
+        experience,
+        availability,
         role,
+        profileImage: req.file ? req.file.path : null,
       };
-
-      // Add role-specific fields
-      if (role === "provider") {
-        // Validate provider-specific fields
-        if (!skills || !experience || !hourlyRate) {
-          return res.status(400).json({
-            success: false,
-            message: "Missing required provider fields",
-          });
-        }
-
-        userProfile = {
-          ...userProfile,
-          skills,
-          experience,
-          hourlyRate,
-          availability,
-        };
-      } else if (role === "seeker") {
-        // Validate seeker-specific fields
-        if (!company || !industry || !projectDescription || !budget) {
-          return res.status(400).json({
-            success: false,
-            message: "Missing required seeker fields",
-          });
-        }
-
-        userProfile = {
-          ...userProfile,
-          company,
-          industry,
-          projectDescription,
-          budget,
-        };
-      }
 
       // Create new user
       const user = await User.create(userProfile);

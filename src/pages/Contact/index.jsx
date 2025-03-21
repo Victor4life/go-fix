@@ -90,7 +90,7 @@ const index = () => {
 
           {/* Contact Info Section */}
           <div
-            className="relative rounded-2xl overflow-hidden shadow-2xl h-full flex flex-col justify-between bg-blue-700"
+            className="relative rounded-2xl overflow-hidden shadow-2xl h-full flex flex-col justify-between bg-blue-400"
             style={{
               backgroundImage: 'url("images/contact.png")',
               backgroundSize: "cover",
@@ -99,7 +99,7 @@ const index = () => {
             }}
           >
             {/* Add a darker overlay to make text more visible */}
-            <div className="relative z-10 p-8 bg-black/30 h-full flex flex-col">
+            <div className="relative z-10 p-8 bg-black/70 h-full flex flex-col">
               <div>
                 <h3 className="text-2xl font-bold mb-6 text-white">
                   Contact Information

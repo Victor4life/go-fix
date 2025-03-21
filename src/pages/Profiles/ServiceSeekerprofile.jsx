@@ -9,7 +9,8 @@ const ServiceSeekerProfile = () => {
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true); // Add this with your other state declarations
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [imagePreview, setImagePreview] = useState(null);
 
   const [profileData, setProfileData] = useState({
     name: "",
@@ -20,11 +21,36 @@ const ServiceSeekerProfile = () => {
     serviceType: "",
     experience: "",
     availability: "",
+    profileImage: null,
+    imageUrl: "",
   });
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setProfileData((prev) => ({
+        ...prev,
+        profileImage: file,
+      }));
+
+      // Create preview URL
+      const previewUrl = URL.createObjectURL(file);
+      setImagePreview(previewUrl);
+    }
+  };
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
+
+  // Add the new useEffect here
+  useEffect(() => {
+    return () => {
+      if (imagePreview && imagePreview.startsWith("blob:")) {
+        URL.revokeObjectURL(imagePreview);
+      }
+    };
+  }, [imagePreview]);
 
   // Fetch profile data when component mounts
   useEffect(() => {
@@ -42,7 +68,7 @@ const ServiceSeekerProfile = () => {
         "Raw profile data from backend (detailed):",
         JSON.stringify(data, null, 2)
       );
-      // This will show us the complete nested structure
+
       if (data.success && data.profile) {
         const newProfileData = {
           name: data.profile.username || "",
@@ -53,9 +79,14 @@ const ServiceSeekerProfile = () => {
           serviceType: data.profile.profile?.serviceType || "",
           experience: data.profile.profile?.experience || "",
           availability: data.profile.profile?.availability || "",
+          imageUrl: data.profile.profile?.imageUrl || "", // Add this line
         };
-        console.log("Profile object structure:", data.profile);
-        console.log("Mapped profile data:", newProfileData);
+
+        // Set image preview if profile image exists
+        if (data.profile.profile?.imageUrl) {
+          setImagePreview(data.profile.profile.imageUrl);
+        }
+
         setProfileData(newProfileData);
       }
     } catch (err) {
@@ -65,7 +96,6 @@ const ServiceSeekerProfile = () => {
       setLoading(false);
     }
   };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -73,32 +103,32 @@ const ServiceSeekerProfile = () => {
     setSuccessMessage("");
 
     try {
-      const updateData = {
-        username: profileData.name,
-        email: profileData.email,
-        phoneNumber: profileData.phoneNumber,
-        address: profileData.address,
-        businessName: profileData.businessName,
-        serviceType: profileData.serviceType,
-        experience: profileData.experience,
-        availability: profileData.availability,
-        skills: [],
-        hourlyRate: 0,
-      };
+      // Create FormData to handle file upload
+      const formData = new FormData();
 
-      console.log("Sending update data:", updateData);
+      // Append all profile data
+      formData.append("username", profileData.name);
+      formData.append("email", profileData.email);
+      formData.append("phoneNumber", profileData.phoneNumber);
+      formData.append("address", profileData.address);
+      formData.append("businessName", profileData.businessName);
+      formData.append("serviceType", profileData.serviceType);
+      formData.append("experience", profileData.experience);
+      formData.append("availability", profileData.availability);
+
+      // Append image if exists
+      if (profileData.profileImage) {
+        formData.append("profileImage", profileData.profileImage);
+      }
 
       const response = await fetch("http://localhost:5000/api/profile", {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
         credentials: "include",
-        body: JSON.stringify(updateData),
+        body: formData, // Send FormData instead of JSON
+        // Remove Content-Type header - browser will set it automatically with boundary
       });
 
       const data = await response.json();
-      console.log("Update response data:", data);
 
       if (response.ok) {
         setSuccessMessage("Profile updated successfully!");
@@ -139,202 +169,315 @@ const ServiceSeekerProfile = () => {
     );
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      {/* Mobile Menu Button */}
-      <button
-        className="md:hidden fixed top-4 left-4 z-50 p-2 rounded-md bg-white shadow-md hover:bg-gray-100"
-        onClick={toggleSidebar}
-        aria-label="Toggle menu"
-      >
-        <svg
-          className="w-6 h-6"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
+    <>
+      <div className="flex min-h-screen bg-gray-50">
+        {/* Mobile Menu Button */}
+        <button
+          className="md:hidden fixed top-4 left-4 z-50 p-2 rounded-md bg-white shadow-md hover:bg-gray-100 mb-4"
+          onClick={toggleSidebar}
+          aria-label="Toggle menu"
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d={
-              isSidebarOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"
-            }
-          />
-        </svg>
-      </button>
+          <svg
+            className="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d={
+                isSidebarOpen
+                  ? "M6 18L18 6M6 6l12 12"
+                  : "M4 6h16M4 12h16M4 18h16"
+              }
+            />
+          </svg>
+        </button>
 
-      {/* Sidebar */}
-      <aside
-        className={`
+        {/* Sidebar */}
+        <aside
+          className={`
     fixed md:sticky top-0 left-0 h-screen bg-white shadow-lg transition-all duration-300 
     ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} 
     ${isSidebarCollapsed ? "w-16" : "w-64"}
     md:translate-x-0 // Always show on desktop
   `}
-      >
-        <DashboardSideBar
-          isCollapsed={isSidebarCollapsed}
-          setIsCollapsed={setIsSidebarCollapsed}
-        />
-      </aside>
-      <main className="flex-1 transition-all duration-300 py-6 px-4 min-h-screen relative overflow-hidden">
-        <div className="max-w-md mx-auto py-16">
-          <h2 className="text-2xl md:text-3xl font-bold text-center mb-6">
-            My Service <span className="text-blue-500">Profile</span>
-          </h2>
-          {error && (
-            <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-md">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  {/* You can add an error icon here */}
-                  <svg
-                    className="h-5 w-5 text-red-400"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
+        >
+          <DashboardSideBar
+            isCollapsed={isSidebarCollapsed}
+            setIsCollapsed={setIsSidebarCollapsed}
+          />
+        </aside>
+
+        <main className="flex-1 transition-all duration-300 py-2 px-4 md:px-30 min-h-screen relative overflow-hidden">
+          <div className="w-full py-8">
+            <h2 className="text-2xl font-bold mb-6">Profile</h2>
+            {error && (
+              <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-md">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    {/* You can add an error icon here */}
+                    <svg
+                      className="h-5 w-5 text-red-400"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm text-red-700">{error}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+            {successMessage && (
+              <div className="bg-green-100 border-l-4 border-green-500 p-4 rounded-md">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    {/* You can add an error icon here */}
+                    <svg
+                      className="h-5 w-5 text-green-400"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M16.707 5.293a1 1 0 00-1.414 0L7 13.586 4.707 11.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l9-9a1 1 0 000-1.414z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm text-green-700">{successMessage}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+            <div>
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
+                  {/* Profile Picture */}
+                  <div className="bg-blue-100 text-blue-800 p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 w-full">
+                    <h3 className="text-xl font-semibold mb-4">
+                      Profile Image
+                    </h3>
+                    <div className="space-y-4">
+                      {/* Image preview */}
+                      <div className="mt-2 justify-center flex">
+                        <img
+                          src={
+                            imagePreview ||
+                            profileData.imageUrl ||
+                            "/images/profile-picture.png"
+                          }
+                          alt="Profile"
+                          className="w-36 h-36 object-cover rounded-full"
+                        />
+                      </div>
+                      {/* Add this div to show the image preview*/}
+                      <div>
+                        <label
+                          htmlFor="profileImage"
+                          className="block text-sm font-medium text-blue-800 mb-1"
+                        >
+                          Profile Image
+                        </label>
+                        <input
+                          id="profileImage"
+                          name="profileImage"
+                          type="file"
+                          accept="image/*"
+                          onChange={handleImageChange}
+                          className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-blue-800 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Basic Information */}
+                  <div className="bg-yellow-100 text-yellow-800 p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 w-full">
+                    <h3 className="text-xl font-semibold mb-4">
+                      Basic Information
+                    </h3>
+                    <div className="space-y-4">
+                      <div>
+                        <label
+                          htmlFor="name"
+                          className="block text-sm font-medium text-yellow-800 mb-1"
+                        >
+                          Full Name
+                        </label>
+                        <input
+                          id="name"
+                          name="name"
+                          type="text"
+                          value={profileData.name}
+                          onChange={handleChange}
+                          className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-yellow-800 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        />
+                      </div>
+                      <div>
+                        <label
+                          htmlFor="email"
+                          className="block text-sm font-medium text-yellow-800 mb-1"
+                        >
+                          Email
+                        </label>
+                        <input
+                          id="email"
+                          name="email"
+                          type="email"
+                          value={profileData.email}
+                          onChange={handleChange}
+                          className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-yellow-800 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  {/* Contact Information */}
+                  <div className="bg-green-100 text-green-800 p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 w-full">
+                    <h3 className="text-xl font-semibold mb-4">
+                      Contact Information
+                    </h3>
+                    <div className="space-y-4">
+                      <div>
+                        <label
+                          htmlFor="phoneNumber"
+                          className="block text-sm font-medium text-green-800 mb-1"
+                        >
+                          Phone Number
+                        </label>
+                        <input
+                          id="phoneNumber"
+                          name="phoneNumber"
+                          type="tel"
+                          value={profileData.phoneNumber}
+                          onChange={handleChange}
+                          className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-green-800 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        />
+                      </div>
+                      <div>
+                        <label
+                          htmlFor="address"
+                          className="block text-sm font-medium text-green-800 mb-1"
+                        >
+                          Business Address
+                        </label>
+                        <input
+                          id="address"
+                          name="address"
+                          type="text"
+                          value={profileData.address}
+                          onChange={handleChange}
+                          className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-green-800 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  {/* Business Information */}
+                  <div className="bg-purple-100 text-purple-800 p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 w-full">
+                    <h3 className="text-xl font-semibold mb-4">
+                      Business Information
+                    </h3>
+                    <div className="space-y-4">
+                      <div>
+                        <label
+                          htmlFor="businessName"
+                          className="block text-sm font-medium text-purple-800 mb-1"
+                        >
+                          Business Name
+                        </label>
+                        <input
+                          id="businessName"
+                          name="businessName"
+                          type="text"
+                          value={profileData.businessName}
+                          onChange={handleChange}
+                          className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-purple-800 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        />
+                      </div>
+                      <div>
+                        <label
+                          htmlFor="serviceType"
+                          className="block text-sm font-medium text-purple-800 mb-1"
+                        >
+                          Service Type
+                        </label>
+                        <select
+                          id="serviceType"
+                          name="serviceType"
+                          value={profileData.serviceType}
+                          onChange={handleChange}
+                          className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-purple-800 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        >
+                          <option value="">Select Service Type</option>
+                          <option value="plumbing">Plumbing</option>
+                          <option value="carpentry">Carpentry</option>
+                          <option value="cleaning">Cleaning</option>
+                          <option value="electrician">Electrician</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label
+                          htmlFor="experience"
+                          className="block text-sm font-medium text-purple-800 mb-1"
+                        >
+                          Years of Experience
+                        </label>
+                        <input
+                          id="experience"
+                          name="experience"
+                          type="text"
+                          value={profileData.experience}
+                          onChange={handleChange}
+                          className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-purple-800 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        />
+                      </div>
+                      <div>
+                        <label
+                          htmlFor="availability"
+                          className="block text-sm font-medium text-purple-800 mb-1"
+                        >
+                          Availability
+                        </label>
+                        <input
+                          id="availability"
+                          name="availability"
+                          type="text"
+                          value={profileData.availability}
+                          onChange={handleChange}
+                          placeholder="e.g., Mon-Fri 9AM-5PM"
+                          className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-purple-800 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                {/* Submit Button */}
+                <div className="mt-6">
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${
+                      loading ? "bg-blue-400" : "bg-blue-600 hover:bg-blue-700"
+                    } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
                   >
-                    <path
-                      fillRule="evenodd"
-                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
+                    {loading ? "Updating..." : "Update Profile"}
+                  </button>
                 </div>
-                <div className="ml-3">
-                  <p className="text-sm text-red-700">{error}</p>
-                </div>
-              </div>
+              </form>
             </div>
-          )}
-          {successMessage && (
-            <div className="bg-green-100 border-l-4 border-green-500 p-4 rounded-md">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  {/* You can add an error icon here */}
-                  <svg
-                    className="h-5 w-5 text-green-400"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M16.707 5.293a1 1 0 00-1.414 0L7 13.586 4.707 11.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l9-9a1 1 0 000-1.414z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm text-green-700">{successMessage}</p>
-                </div>
-              </div>
-            </div>
-          )}
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Basic Information */}
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h3 className="text-xl font-semibold mb-4">Basic Information</h3>
-              <div className="space-y-4">
-                <input
-                  name="name"
-                  type="text"
-                  value={profileData.name}
-                  onChange={handleChange}
-                  placeholder="Full Name"
-                  className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                />
-                <input
-                  name="email"
-                  type="email"
-                  value={profileData.email}
-                  onChange={handleChange}
-                  placeholder="Email"
-                  className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-            </div>
-
-            {/* Contact Information */}
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h3 className="text-xl font-semibold mb-4">
-                Contact Information
-              </h3>
-              <div className="space-y-4">
-                <input
-                  name="phoneNumber"
-                  type="tel"
-                  value={profileData.phoneNumber}
-                  onChange={handleChange}
-                  placeholder="Phone Number"
-                  className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                />
-                <input
-                  name="address"
-                  type="text"
-                  value={profileData.address}
-                  onChange={handleChange}
-                  placeholder="Business Address"
-                  className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-            </div>
-
-            {/* Business Information */}
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h3 className="text-xl font-semibold mb-4">
-                Business Information
-              </h3>
-              <div className="space-y-4">
-                <input
-                  name="businessName"
-                  type="text"
-                  value={profileData.businessName}
-                  onChange={handleChange}
-                  placeholder="Business Name"
-                  className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                />
-                <select
-                  name="serviceType"
-                  value={profileData.serviceType}
-                  onChange={handleChange}
-                  className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="">Select Service Type</option>
-                  <option value="plumbing">Plumbing</option>
-                  <option value="carpentry">Carpentry</option>
-                  <option value="cleaning">Cleaning</option>
-                  <option value="electrician">Electrician</option>
-                </select>
-                <input
-                  name="experience"
-                  type="text"
-                  value={profileData.experience}
-                  onChange={handleChange}
-                  placeholder="Years of Experience"
-                  className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                />
-                <input
-                  name="availability"
-                  type="text"
-                  value={profileData.availability}
-                  onChange={handleChange}
-                  placeholder="Availability (e.g., Mon-Fri 9AM-5PM)"
-                  className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${
-                loading ? "bg-blue-400" : "bg-blue-600 hover:bg-blue-700"
-              } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
-            >
-              {loading ? "Updating..." : "Update Profile"}
-            </button>
-          </form>
-        </div>
-      </main>
-    </div>
+          </div>
+        </main>
+      </div>
+    </>
   );
 };
 
