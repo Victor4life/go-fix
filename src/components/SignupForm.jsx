@@ -23,12 +23,81 @@ const SignupForm = () => {
     availability: "",
     profileImage: null, // Add this line
   });
+
+  const validateFormData = (data) => {
+    const requiredFields = [
+      "username",
+      "email",
+      "password",
+      "phoneNumber",
+      "address",
+      "businessName",
+      "serviceType",
+      "experience",
+      "availability",
+      "role",
+    ];
+
+    const missingFields = requiredFields.filter((field) => !data[field]);
+
+    if (missingFields.length > 0) {
+      console.log("Missing required fields:", missingFields);
+      return false;
+    }
+    return true;
+  };
+
+  // Add this with your other handler functions
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prevData) => ({
-      ...prevData,
+    setFormData((prev) => ({
+      ...prev,
       [name]: value,
     }));
+
+    // Clear any existing errors when user starts typing
+    if (error) {
+      setError("");
+    }
+  };
+
+  const handleImageChange = async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      try {
+        const formData = new FormData();
+        formData.append("image", file);
+
+        console.log("Attempting to upload file:", {
+          name: file.name,
+          type: file.type,
+          size: file.size,
+        });
+
+        const response = await fetch("http://localhost:5000/api/upload", {
+          method: "POST",
+          credentials: "include",
+          body: formData,
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Upload failed: ${errorText}`);
+        }
+
+        const data = await response.json();
+        if (data.success) {
+          setFormData((prev) => ({
+            ...prev,
+            profileImage: data.imageUrl,
+          }));
+          setImagePreview(data.imageUrl);
+        }
+      } catch (error) {
+        console.error("Upload error:", error);
+        setError("Failed to upload image. Please try again.");
+      }
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -37,95 +106,75 @@ const SignupForm = () => {
     setError("");
 
     try {
-      const formDataToSend = new FormData();
-
-      formDataToSend.append("username", formData.name);
-      formDataToSend.append("email", formData.email);
-      formDataToSend.append("password", formData.password);
-      formDataToSend.append("phoneNumber", formData.phoneNumber);
-      formDataToSend.append("address", formData.address);
-      formDataToSend.append("businessName", formData.businessName);
-      formDataToSend.append("serviceType", formData.serviceType);
-      formDataToSend.append("experience", formData.experience);
-      formDataToSend.append("availability", formData.availability);
-      formDataToSend.append("role", "provider");
-
-      if (formData.profileImage) {
-        formDataToSend.append("profileImage", formData.profileImage);
+      // First check if passwords match
+      if (formData.password !== formData.confirmPassword) {
+        setError("Passwords do not match");
+        setLoading(false);
+        return;
       }
 
-      // Only log non-sensitive fields
-      console.log("Submitting form for:", {
+      const formDataToSend = {
         username: formData.name,
+        email: formData.email,
+        password: formData.password,
+        phoneNumber: formData.phoneNumber,
+        address: formData.address,
+        businessName: formData.businessName,
         serviceType: formData.serviceType,
-        hasProfileImage: !!formData.profileImage,
-      });
+        experience: formData.experience,
+        availability: formData.availability,
+        role: "provider",
+        profileImage: formData.profileImage,
+      };
+
+      // Validate the data before sending
+      if (!validateFormData(formDataToSend)) {
+        setError("Please fill in all required fields");
+        setLoading(false);
+        return;
+      }
+
+      console.log("Sending data:", JSON.stringify(formDataToSend, null, 2));
 
       const response = await fetch("http://localhost:5000/api/auth/signup", {
         method: "POST",
-        body: formDataToSend,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formDataToSend),
       });
 
       const data = await response.json();
+      console.log("Complete server response:", data);
 
-      // Only log success/failure status, not the full response
-      console.log("Signup status:", response.ok ? "success" : "failed");
-
-      if (response.ok) {
-        navigate("/login");
-      } else {
-        setError(data.message || "Failed to create account");
+      if (data.success === false && data.message === "User already exists") {
+        setError(
+          "An account with this email already exists. Please use a different email address."
+        );
+        setFormData((prev) => ({
+          ...prev,
+          email: "", // Clear the email field
+        }));
+        return;
       }
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to create account");
+      }
+
+      // If we get here, the signup was successful
+      console.log("Signup successful, redirecting to login...");
+      navigate("/login");
     } catch (err) {
-      console.error("Network error occurred");
-      setError("Network error or server not responding");
+      console.error("Full error details:", {
+        message: err.message,
+        stack: err.stack,
+      });
+      setError(err.message || "Network error or server not responding");
     } finally {
       setLoading(false);
     }
   };
-
-  // Add this with your other handler functions
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      // File size validation (5MB limit)
-      if (file.size > 5 * 1024 * 1024) {
-        setError("Image size should be less than 5MB");
-        return;
-      }
-
-      setFormData((prev) => ({
-        ...prev,
-        profileImage: file,
-      }));
-
-      // Create preview URL
-      setImagePreview(URL.createObjectURL(file));
-    }
-  };
-
-  // Add form data validation
-  const validateForm = () => {
-    if (
-      !formData.name ||
-      !formData.email ||
-      !formData.password ||
-      !formData.confirmPassword
-    ) {
-      setError("Please fill in all required fields");
-      return false;
-    }
-    if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match");
-      return false;
-    }
-    if (formData.password.length < 6) {
-      setError("Password must be at least 6 characters long");
-      return false;
-    }
-    return true;
-  };
-
   return (
     <section className="min-h-screen relative flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       {/* Blob Background */}

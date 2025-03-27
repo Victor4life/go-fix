@@ -4,14 +4,10 @@ const jwt = require("jsonwebtoken");
 class AuthController {
   static async signup(req, res) {
     try {
-      // Debug logs
-      console.log("========= DEBUG START =========");
-      console.log("Headers:", req.headers);
-      console.log("Body:", req.body);
-      console.log("Files:", req.files);
-      console.log("File:", req.file);
-      console.log("Content Type:", req.headers["content-type"]);
-      console.log("========= DEBUG END =========");
+      console.log("=== START OF SIGNUP PROCESS ===");
+
+      // 1. Log the entire request body
+      console.log("1. Request body:", JSON.stringify(req.body, null, 2));
 
       const {
         name,
@@ -26,11 +22,10 @@ class AuthController {
         role = "provider",
       } = req.body;
 
-      // Log individual fields
-      console.log("Parsed fields:", {
+      // 2. Log extracted data
+      console.log("2. Extracted data:", {
         name,
         email,
-        password,
         phoneNumber,
         address,
         businessName,
@@ -40,42 +35,40 @@ class AuthController {
         role,
       });
 
-      // Input validation with detailed logging
-      const missingFields = [];
-      if (!name) missingFields.push("name");
-      if (!email) missingFields.push("email");
-      if (!password) missingFields.push("password");
-      if (!phoneNumber) missingFields.push("phoneNumber");
-      if (!address) missingFields.push("address");
-      if (!businessName) missingFields.push("businessName");
-      if (!serviceType) missingFields.push("serviceType");
-      if (!experience) missingFields.push("experience");
-      if (!availability) missingFields.push("availability");
+      // 3. Check database BEFORE any operation
+      console.log("3. Checking database for ALL users");
+      const allUsers = await User.find({});
+      console.log(
+        "Current users in database:",
+        allUsers.map((u) => ({
+          email: u.email,
+          name: u.name,
+        }))
+      );
 
-      if (missingFields.length > 0) {
-        console.log("Missing fields:", missingFields);
-        return res.status(400).json({
-          success: false,
-          message: `All required fields must be provided. Missing: ${missingFields.join(
-            ", "
-          )}`,
-        });
-      }
+      // 4. Explicitly check for the email
+      console.log("4. Checking specifically for email:", email);
+      const existingUser = await User.findOne({ email: email });
+      console.log("Existing user check result:", existingUser);
 
-      // Rest of your existing code...
-      // Check if user already exists
-      const existingUser = await User.findOne({ email });
       if (existingUser) {
+        console.log("5. Found existing user with email:", email);
         return res.status(400).json({
           success: false,
           message: "User already exists",
+          debug: {
+            existingUserId: existingUser._id,
+            existingUserEmail: existingUser.email,
+          },
         });
       }
+
+      console.log("6. No existing user found, proceeding with creation");
 
       // Create user profile
       const userProfile = {
         name,
-        email,
+        email: email.toLowerCase(),
         password,
         phoneNumber,
         address,
@@ -87,8 +80,14 @@ class AuthController {
         profileImage: req.file ? req.file.path : null,
       };
 
+      console.log("7. Attempting to create user with profile:", {
+        ...userProfile,
+        password: "[HIDDEN]",
+      });
+
       // Create new user
       const user = await User.create(userProfile);
+      console.log("8. User created successfully:", user._id);
 
       // Generate JWT token
       const token = jwt.sign(
@@ -101,9 +100,13 @@ class AuthController {
         { expiresIn: "24h" }
       );
 
+      console.log("9. JWT token generated successfully");
+
       // Remove password from response
       const userResponse = user.toObject();
       delete userResponse.password;
+
+      console.log("=== END OF SIGNUP PROCESS ===");
 
       res.status(201).json({
         success: true,
@@ -111,7 +114,11 @@ class AuthController {
         user: userResponse,
       });
     } catch (error) {
-      console.error("Signup error:", error);
+      console.error("Signup error:", {
+        message: error.message,
+        stack: error.stack,
+        name: error.name,
+      });
       res.status(500).json({
         success: false,
         message: "Error during signup",

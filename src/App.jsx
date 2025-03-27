@@ -57,10 +57,15 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
-            <Route path="/services" element={<Services />} />
+            <Route path="/services/*" element={<Services />} />
             <Route path="/blog" element={<Blog />} />
             <Route path="/blog/:slug" element={<BlogPost />} />
             <Route path="/contact" element={<Contact />} />
+            {/* Add this new route for category profiles */}
+            <Route
+              path="/services/category/:categoryName"
+              element={<Services />}
+            />
 
             {/* Protected Routes */}
             <Route

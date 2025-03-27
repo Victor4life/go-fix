@@ -155,18 +155,13 @@ const ServiceSeekerProfile = () => {
     }));
   };
 
-  if (loading)
+  if (loading) {
     return (
-      <div className="fixed inset-0 flex justify-center items-center bg-white bg-opacity-75">
-        <Spinner
-          radius={40}
-          color={"#3B82F6"}
-          stroke={4}
-          visible={true}
-          speed={1.5}
-        />
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div>
       </div>
     );
+  }
 
   return (
     <>
@@ -410,19 +405,14 @@ const ServiceSeekerProfile = () => {
                         >
                           Service Type
                         </label>
-                        <select
+                        <input
+                          type="text"
                           id="serviceType"
                           name="serviceType"
                           value={profileData.serviceType}
                           onChange={handleChange}
                           className="appearance-none rounded relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-purple-800 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                        >
-                          <option value="">Select Service Type</option>
-                          <option value="plumbing">Plumbing</option>
-                          <option value="carpentry">Carpentry</option>
-                          <option value="cleaning">Cleaning</option>
-                          <option value="electrician">Electrician</option>
-                        </select>
+                        />
                       </div>
                       <div>
                         <label

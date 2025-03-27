@@ -185,32 +185,15 @@ const Blog = () => {
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
       <div className="container  mx-auto max-w-6xl px-4 pb-24">
         {/* Header Section */}
-        <div className="relative overflow-hidden bg-gradient-to-t from-blue-100 to-blue-100 py-16 rounded-b-3xl shadow-sm">
+        <div className="relative overflow-hidden py-16 rounded-b-3xl shadow-sm">
           <div className="absolute top-0 left-0 w-full h-full opacity-20">
             <div className="absolute top-0 -left-4 w-72 h-72 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl animate-pulse"></div>
             <div className="absolute -top-8 -right-4 w-72 h-72 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl animate-pulse"></div>
           </div>
-          <div className="relative mx-auto max-w-4xl px-4">
-            <img
-              src="/images/hero-vector.png"
-              alt=""
-              className="w-8 h-8 absolute z-1"
-            />
-            <img
-              src="/images/hero-vector-2.png"
-              alt=""
-              className="w-8 h-8 absolute z-1 top-10 right-0 "
-            />
-            <img
-              src="/images/hero-vector-3.png"
-              alt=""
-              className="w-8 h-8 absolute z-1 top-40 "
-            />
-          </div>
 
           <div className="relative container mx-auto px-4">
             <div className="max-w-4xl mx-auto pt-8">
-              <h1 className="text-4xl md:text-5xl font-bold text-center mb-6 tracking-tight leading-tight">
+              <h1 className="text-3xl md:text-4xl font-bold text-center mb-6 tracking-tight leading-tight">
                 Our Blog
               </h1>
               <p className="text-center text-gray-600 text-lg md:text-xl mb-8 max-w-2xl mx-auto leading-relaxed">

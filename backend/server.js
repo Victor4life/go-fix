@@ -9,22 +9,11 @@ const rateLimit = require("express-rate-limit");
 const { sendWelcomeEmail, sendAdminNotification } = require("./emailService");
 const path = require("path");
 const fs = require("fs");
-
-const app = express();
-
+const cloudinary = require("cloudinary").v2;
+const upload = require("./middleware/uploadMiddleware");
 const multer = require("multer");
 
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "uploads/"); // Make sure this directory exists
-  },
-  filename: function (req, file, cb) {
-    cb(null, Date.now() + "-" + file.originalname);
-  },
-});
-
-const upload = multer({ storage: storage });
+const app = express();
 
 // Rate limiting
 const limiter = rateLimit({
@@ -198,6 +187,37 @@ mongoose.connection.on("connected", () => {
 });
 
 // Routes
+// Upload route
+app.post("/api/upload", upload.single("image"), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "No file uploaded",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Upload successful",
+      imageUrl: req.file.path,
+      publicId: req.file.filename,
+      fileDetails: {
+        originalName: req.file.originalname,
+        size: req.file.size,
+        mimeType: req.file.mimetype,
+      },
+    });
+  } catch (error) {
+    console.error("Upload error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Upload failed",
+      error: error.message,
+    });
+  }
+});
+
 // Update the signup route in server.js
 app.post(
   "/api/auth/signup",
@@ -536,6 +556,138 @@ app.put("/api/auth/update-role", authenticateToken, async (req, res) => {
       error: error.message,
     });
   }
+});
+
+// Add this route after your existing routes
+app.get("/api/profiles/:categoryName", async (req, res) => {
+  try {
+    const { categoryName } = req.params;
+    console.log("Searching for category:", categoryName); // Debug log
+
+    // Make the search case-insensitive using regex
+    const profiles = await User.find({
+      "profile.serviceType": new RegExp(categoryName, "i"),
+    }).select("-password");
+
+    console.log("Found profiles:", profiles.length); // Debug log
+
+    if (profiles.length === 0) {
+      // If no profiles found, let's check what service types exist
+      const existingServiceTypes = await User.distinct("profile.serviceType");
+      console.log("Existing service types:", existingServiceTypes);
+
+      return res.status(200).json({
+        success: true,
+        message: "No profiles found for this category",
+        data: [],
+        availableCategories: existingServiceTypes,
+      });
+    }
+
+    // Transform the data to match the frontend expectations
+    const formattedProfiles = profiles.map((user) => ({
+      _id: user._id,
+      name: user.username,
+      profession: user.profile.serviceType,
+      profileImage: user.profile.profileImage,
+      bio: user.profile.experience,
+      rating: 0,
+      reviewCount: 0,
+      location: user.profile.location,
+      experience: user.profile.experience,
+      businessName: user.profile.businessName,
+      availability: user.profile.availability,
+      hourlyRate: user.profile.hourlyRate,
+      skills: user.profile.skills || [],
+      // Add these new fields
+      email: user.email,
+      phoneNumber: user.profile.phone,
+    }));
+
+    res.status(200).json({
+      success: true,
+      count: formattedProfiles.length,
+      data: formattedProfiles,
+    });
+  } catch (error) {
+    console.error("Error fetching profiles:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error fetching profiles",
+      error: error.message,
+    });
+  }
+});
+
+// Add this route to get all service providers
+app.get("/api/profiles", async (req, res) => {
+  try {
+    const profiles = await User.find({
+      "profile.serviceType": { $exists: true },
+    }).select("-password");
+
+    const formattedProfiles = profiles.map((user) => ({
+      _id: user._id,
+      name: user.username,
+      profession: user.profile.serviceType,
+      profileImage: user.profile.profileImage,
+      bio: user.profile.experience,
+      rating: 0,
+      reviewCount: 0,
+      location: user.profile.location,
+      experience: user.profile.experience,
+      businessName: user.profile.businessName,
+      availability: user.profile.availability,
+      hourlyRate: user.profile.hourlyRate,
+      skills: user.profile.skills || [],
+    }));
+
+    res.status(200).json({
+      success: true,
+      count: formattedProfiles.length,
+      data: formattedProfiles,
+    });
+  } catch (error) {
+    console.error("Error fetching profiles:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error fetching profiles",
+      error: error.message,
+    });
+  }
+});
+
+// Add a helper route to see all service types
+app.get("/api/service-types", async (req, res) => {
+  try {
+    const serviceTypes = await User.distinct("profile.serviceType");
+    res.json({
+      success: true,
+      data: serviceTypes,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error fetching service types",
+      error: error.message,
+    });
+  }
+});
+
+//Error handling middleware
+app.use((error, req, res, next) => {
+  if (error instanceof multer.MulterError) {
+    if (error.code === "LIMIT_FILE_SIZE") {
+      return res.status(400).json({
+        success: false,
+        message: "File is too large. Maximum size is 5MB",
+      });
+    }
+  }
+  res.status(500).json({
+    success: false,
+    message: error.message,
+  });
 });
 
 // Start the server

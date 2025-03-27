@@ -1,153 +1,126 @@
-import React from "react";
+import React, { useState, useRef } from "react";
 import {
   FaFacebook,
   FaTwitter,
   FaLinkedin,
   FaInstagram,
   FaYoutube,
+  FaMapMarkerAlt,
+  FaPhone,
+  FaEnvelope,
 } from "react-icons/fa";
 
-const index = () => {
+const ContactForm = () => {
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    subject: "",
+    message: "",
+  });
+  const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitMessage, setSubmitMessage] = useState("");
+  const recaptchaRef = useRef();
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prevState) => ({
+      ...prevState,
+      [name]: value,
+    }));
+  };
+
+  const validateForm = () => {
+    let errors = {};
+    if (!formData.name.trim()) errors.name = "Name is required";
+    if (!formData.email.trim()) {
+      errors.email = "Email is required";
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      errors.email = "Email is invalid";
+    }
+    if (!formData.subject.trim()) errors.subject = "Subject is required";
+    if (!formData.message.trim()) errors.message = "Message is required";
+    return errors;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const formErrors = validateForm();
+    if (Object.keys(formErrors).length === 0) {
+      setIsSubmitting(true);
+      setErrors({});
+      try {
+        const result = await emailjs.send(
+          "service_o8ptmtq",
+          "template_7fo5cos",
+          formData,
+          "POlPdbmHA9PknmCmU"
+        );
+
+        if (result.text === "OK") {
+          setSubmitMessage(
+            "Thank you! Your message has been sent successfully."
+          );
+          setFormData({ name: "", email: "", subject: "", message: "" });
+          recaptchaRef.current.reset();
+        } else {
+          throw new Error("Submission failed");
+        }
+      } catch (error) {
+        console.error("Error submitting form:", error);
+        setSubmitMessage("Oops! Something went wrong. Please try again later.");
+      } finally {
+        setIsSubmitting(false);
+      }
+    } else {
+      setErrors(formErrors);
+    }
+  };
+
   return (
-    <section className="min-h-screen bg-gradient-to-b from-white to-blue-50 overflow-hidden pt-16">
-      <div className="max-w-5xl mx-auto p-8">
-        <h2 className="text-4xl font-bold text-center mb-12 text-gray-800 relative">
-          Get in Touch
-        </h2>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-0 items-center">
-          {/* Form Section */}
-          <div className="backdrop-blur-sm bg-white/80 p-8 rounded-2xl shadow-2xl">
-            <form className="space-y-6">
-              <div>
-                <label
-                  htmlFor="name"
-                  className="block text-sm font-semibold text-gray-700 mb-2"
-                >
-                  Name
-                </label>
-                <input
-                  type="text"
-                  id="name"
-                  name="name"
-                  className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-300"
-                  placeholder="Your Name"
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="email"
-                  className="block text-sm font-semibold text-gray-700 mb-2"
-                >
-                  Email
-                </label>
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-300"
-                  placeholder="your@email.com"
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="subject"
-                  className="block text-sm font-semibold text-gray-700 mb-2"
-                >
-                  Subject
-                </label>
-                <input
-                  type="text"
-                  id="subject"
-                  name="subject"
-                  className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-300"
-                  placeholder="How can we help?"
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="message"
-                  className="block text-sm font-semibold text-gray-700 mb-2"
-                >
-                  Message
-                </label>
-                <textarea
-                  id="message"
-                  name="message"
-                  rows="4"
-                  className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-300"
-                  placeholder="Your message here..."
-                ></textarea>
-              </div>
-              <button
-                type="submit"
-                className="w-full py-3 px-6 rounded-lg bg-gradient-to-r from-indigo-600 to-blue-500 text-white font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300"
-              >
-                Send Message
-              </button>
-            </form>
-          </div>
-
-          {/* Contact Info Section */}
-          <div
-            className="relative rounded-2xl overflow-hidden shadow-2xl h-full flex flex-col justify-between bg-blue-400"
-            style={{
-              backgroundImage: 'url("images/contact.png")',
-              backgroundSize: "cover",
-              backgroundPosition: "center",
-              backgroundRepeat: "no-repeat",
-            }}
-          >
-            {/* Add a darker overlay to make text more visible */}
-            <div className="relative z-10 p-8 bg-black/70 h-full flex flex-col">
-              <div>
-                <h3 className="text-2xl font-bold mb-6 text-white">
-                  Contact Information
-                </h3>
-                <div className="space-y-6 text-white">
-                  <p className="flex items-center space-x-4">
-                    <span className="text-lg">📧</span>
-                    <span>contact@example.com</span>
-                  </p>
-                  <p className="flex items-center space-x-4">
-                    <span className="text-lg">📱</span>
-                    <span>+000-0000000</span>
-                  </p>
-                  <p className="flex items-center space-x-4">
-                    <span className="text-lg">🌍</span>
-                    <span>5, XYZ Street, City, Country</span>
-                  </p>
-                </div>
-              </div>
-
-              <div className="mt-auto pt-8">
-                <h4 className="text-xl font-semibold mb-4 text-white">
-                  Follow Us
-                </h4>
-                <div className="flex space-x-4">
-                  {[
-                    FaYoutube,
-                    FaFacebook,
-                    FaTwitter,
-                    FaLinkedin,
-                    FaInstagram,
-                  ].map((Icon, index) => (
-                    <a
-                      key={index}
-                      href="#"
-                      className="p-2 bg-white/10 rounded-full hover:bg-white/20 transform hover:scale-110 transition-all duration-300"
-                    >
-                      <Icon className="text-white" size={20} />
-                    </a>
-                  ))}
-                </div>
-              </div>
-            </div>
+    <div className="min-h-screen bg-gray-100 px-4 md:px-8 lg:px-16 xl:px-20 py-8 md:py-12">
+      {/* Hero Section */}
+      <div className="text-black py-10 bg-cover bg-center">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <h1 className="text-4xl font-bold mb-4">Contact Us</h1>
+            <p className="text-xl text-gray-600">
+              We'd love to hear from you. Drop us a message and we'll get back
+              to you as soon as possible.
+            </p>
           </div>
         </div>
       </div>
-    </section>
+
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* Quick Contact Info Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+          <div className="bg-white p-6 rounded-lg shadow-md text-center">
+            <div className="flex justify-center mb-4">
+              <FaPhone className="text-indigo-600 text-3xl" />
+            </div>
+            <h3 className="font-semibold text-lg mb-2">Phone</h3>
+            <p>+234-9057155469</p>
+          </div>
+          <div className="bg-white p-6 rounded-lg shadow-md text-center">
+            <div className="flex justify-center mb-4">
+              <FaEnvelope className="text-indigo-600 text-3xl" />
+            </div>
+            <h3 className="font-semibold text-lg mb-2">Email</h3>
+            <p>oluchidonatus.1@gmail.com</p>
+          </div>
+          <div className="bg-white p-6 rounded-lg shadow-md text-center">
+            <div className="flex justify-center mb-4">
+              <FaMapMarkerAlt className="text-indigo-600 text-3xl" />
+            </div>
+            <h3 className="font-semibold text-lg mb-2">Location</h3>
+            <p>5, Camp Davis Road</p>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 
-export default index;
+export default ContactForm;
