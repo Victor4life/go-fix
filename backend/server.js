@@ -36,6 +36,15 @@ if (!fs.existsSync("uploads")) {
   fs.mkdirSync("uploads");
 }
 
+// Add CSP headers here, before other middleware
+app.use((req, res, next) => {
+  res.setHeader(
+    "Content-Security-Policy",
+    "default-src 'self'; img-src 'self' data:; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline';"
+  );
+  next();
+});
+
 // Middleware
 app.use(cors(corsOptions));
 app.use(express.json());
@@ -671,6 +680,10 @@ app.get("/api/service-types", async (req, res) => {
     });
   }
 });
+
+// Add this route to get a specific service provider by ID
+const serviceRequestRoutes = require("./routes/serviceRequests");
+app.use("/api", serviceRequestRoutes);
 
 //Error handling middleware
 app.use((error, req, res, next) => {

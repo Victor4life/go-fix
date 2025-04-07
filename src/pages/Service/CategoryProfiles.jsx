@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
-import { FaPhone } from "react-icons/fa";
+import { FaBell, FaPhone } from "react-icons/fa";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const CategoryProfiles = () => {
   const { categoryName } = useParams();
@@ -21,6 +23,7 @@ const CategoryProfiles = () => {
   const [copySuccess, setCopySuccess] = useState("");
   const [showContact, setShowContact] = useState({});
   const [isCallLoading, setIsCallLoading] = useState({});
+  const [isNotifying, setIsNotifying] = useState({});
 
   useEffect(() => {
     const fetchProfiles = async () => {
@@ -170,20 +173,91 @@ const CategoryProfiles = () => {
   // Update the handleContact function
   const handleContact = async (profile) => {
     if (profile.phoneNumber) {
+      // Show loading toast
+      const loadingToastId = toast.loading(
+        <div className="flex items-center space-x-2">
+          <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+          <span>Initiating call...</span>
+        </div>,
+        {
+          position: "top-right",
+        }
+      );
+
       setIsCallLoading((prev) => ({ ...prev, [profile._id]: true }));
 
       try {
         const confirmCall = window.confirm(
           `Would you like to call ${profile.name} at ${profile.phoneNumber}?`
         );
+
         if (confirmCall) {
           window.location.href = `tel:${profile.phoneNumber}`;
+
+          // Update loading toast to success
+          toast.update(loadingToastId, {
+            render: (
+              <div className="flex items-center space-x-2">
+                <span className="text-lg">📞</span>
+                <div>
+                  <p className="font-medium">Connecting your call</p>
+                  <p className="text-sm opacity-90">Redirecting to phone...</p>
+                </div>
+              </div>
+            ),
+            type: "success",
+            isLoading: false,
+            autoClose: 3000,
+            className: "bg-green-500 text-white",
+          });
+        } else {
+          // User cancelled the call
+          toast.update(loadingToastId, {
+            render: (
+              <div className="flex items-center space-x-2">
+                <span className="text-lg">❌</span>
+                <p className="font-medium">Call cancelled</p>
+              </div>
+            ),
+            type: "info",
+            isLoading: false,
+            autoClose: 2000,
+            className: "bg-slate-500 text-white",
+          });
         }
+      } catch (error) {
+        console.error("Error initiating call:", error);
+        toast.update(loadingToastId, {
+          render: (
+            <div className="flex items-center space-x-2">
+              <span className="text-lg">❌</span>
+              <div>
+                <p className="font-medium">Failed to initiate call</p>
+                <p className="text-sm opacity-90">Please try again</p>
+              </div>
+            </div>
+          ),
+          type: "error",
+          isLoading: false,
+          autoClose: 5000,
+          className: "bg-red-500 text-white",
+        });
       } finally {
         setIsCallLoading((prev) => ({ ...prev, [profile._id]: false }));
       }
     } else {
-      alert("Phone number is not available for this professional");
+      // No phone number available
+      toast.error(
+        <div className="flex items-center space-x-2">
+          <span className="text-lg">📱</span>
+          <p className="font-medium">Phone number not available</p>
+        </div>,
+        {
+          position: "top-right",
+          autoClose: 4000,
+          className: "bg-orange-500 text-white",
+        }
+      );
     }
   };
 
@@ -215,6 +289,88 @@ const CategoryProfiles = () => {
       .catch((err) => console.error("Failed to copy:", err));
   };
 
+  const handleServiceRequest = async (profile) => {
+    // Show loading toast
+    const loadingToastId = toast.loading(
+      <div className="flex items-center space-x-2 bg-green-500 text-white p-2 rounded">
+        <span className="text-lg">🔔</span>
+        <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+        <span>Sending service request...</span>
+      </div>,
+      {
+        position: "top-right",
+      }
+    );
+
+    try {
+      setIsNotifying((prev) => ({ ...prev, [profile._id]: true }));
+
+      const response = await axios.post(
+        "http://localhost:5000/api/service-requests/notify",
+        {
+          professionalId: profile._id,
+          professionalEmail: profile.email,
+          serviceName: profile.profession,
+          professionalName: profile.name,
+        }
+      );
+
+      if (response.data.success) {
+        // Update loading toast to success
+        toast.update(loadingToastId, {
+          render: (
+            <div className="flex items-center space-x-2">
+              <span className="text-lg">🎉</span>
+              <div>
+                <p className="font-medium">Service request sent!</p>
+                <p className="text-sm opacity-90">
+                  Professional will be notified
+                </p>
+              </div>
+            </div>
+          ),
+          type: "success",
+          isLoading: false,
+          autoClose: 5000,
+          className: "bg-green-500 text-white",
+        });
+      }
+    } catch (error) {
+      console.error("Error sending service request:", error);
+      toast.update(loadingToastId, {
+        render: (
+          <div className="flex items-center space-x-2">
+            <span className="text-lg">❌</span>
+            <div>
+              <p className="font-medium">Failed to send request</p>
+              <p className="text-sm opacity-90">Please try again</p>
+            </div>
+          </div>
+        ),
+        type: "error",
+        isLoading: false,
+        autoClose: 5000,
+        className: "bg-red-500 text-white",
+      });
+    } finally {
+      setIsNotifying((prev) => ({ ...prev, [profile._id]: false }));
+    }
+  };
+
+  const getCloudinaryUrl = (publicId, options = {}) => {
+    const {
+      width = 200,
+      height = 200,
+      crop = "fill",
+      gravity = "face",
+      quality = "auto",
+    } = options;
+
+    return publicId
+      ? `https://res.cloudinary.com/dcsvesl4j/image/upload/c_${crop},g_${gravity},h_${height},w_${width},q_${quality}/${publicId}`
+      : "/images/profile-picture2.jpg";
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 px-4 md:px-8 lg:px-16 py-8 md:py-16">
       <div className="container mx-auto">
@@ -235,88 +391,188 @@ const CategoryProfiles = () => {
                 key={profile._id}
                 className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-all duration-300"
               >
-                <div className="flex items-center space-x-4 mb-4">
-                  <img
-                    src={profile.profileImage || "/images/profile-picture2.jpg"}
-                    alt={profile.name}
-                    className="w-16 h-16 rounded-full object-cover"
-                    onError={(e) => {
-                      e.target.src = "/images/profile-picture2.jpg";
-                    }}
-                  />
-                  <div>
-                    <h2 className="text-xl font-semibold">{profile.name}</h2>
-                    <p className="text-gray-600">{profile.profession}</p>
+                <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-6 rounded-lg shadow-lg mb-4">
+                  <div className="flex items-center space-x-6">
+                    <div className="relative">
+                      <img
+                        src={getCloudinaryUrl(profile.profileImage, {
+                          width: 64,
+                          height: 64,
+                        })}
+                        srcSet={`
+          ${getCloudinaryUrl(profile.profileImage, {
+            width: 64,
+            height: 64,
+          })} 1x,
+          ${getCloudinaryUrl(profile.profileImage, {
+            width: 128,
+            height: 128,
+          })} 2x
+        `}
+                        alt={profile.name}
+                        className="w-20 h-20 rounded-full object-cover border-4 border-white shadow-md"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = "/images/profile-picture2.jpg";
+                        }}
+                      />
+                    </div>
+                    <div className="text-white">
+                      <h2 className="text-2xl font-bold tracking-wide mb-1">
+                        {profile.name}
+                      </h2>
+                      <p className="text-blue-100 font-medium">
+                        {profile.profession}
+                      </p>
+                    </div>
                   </div>
                 </div>
 
                 {profile.bio && (
-                  <p className="text-gray-600 mb-4">{profile.bio}</p>
+                  <p
+                    className="text-gray-700 mb-6 leading-relaxed font-medium tracking-wide px-6 rounded-xl 
+  first-letter:text-3xl first-letter:font-bold first-letter:text-blue-600 first-letter:mr-1
+  animate-fade-in selection:bg-blue-100 selection:text-blue-800"
+                  >
+                    Hi I am {profile.name} a {profile.profession} with{" "}
+                    {profile.experience} years of experience. I am based in{" "}
+                    {profile.location}. I am available for{" "}
+                    {profile.availability}. I look forward to work with you.
+                  </p>
                 )}
 
-                <div className="space-y-2">
-                  {profile.location && (
-                    <p className="text-gray-600">
-                      <strong>Location:</strong> {profile.location}
-                    </p>
-                  )}
-                  {profile.experience && (
-                    <p className="text-gray-600">
-                      <strong>Experience:</strong> {profile.experience}
-                    </p>
-                  )}
-
-                  <button
-                    onClick={() => setShowContact(!showContact)}
-                    className="text-blue-500 text-sm hover:text-blue-600"
-                  >
-                    {showContact ? "Hide Contact Info" : "Show Contact Info"}
-                  </button>
-
-                  {showContact && (
-                    <div className="space-y-2">
-                      {profile.email && (
-                        <p
-                          className="text-gray-600 cursor-pointer hover:bg-gray-100 rounded p-1"
-                          onClick={() =>
-                            copyToClipboard(profile.email, "Email")
-                          }
-                        >
-                          <strong>Email:</strong> {profile.email}
-                          {copySuccess && copySuccess.includes("Email") && (
-                            <span className="text-green-500 ml-2 text-sm">
-                              ✓ Copied!
-                            </span>
-                          )}
+                <div className="px-3">
+                  {/* Profile Details Section */}
+                  <div>
+                    {profile.location && (
+                      <div className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-50 transition-colors">
+                        <i className="fas fa-map-marker-alt text-blue-500"></i>
+                        <p className="text-gray-700">
+                          <span className="font-semibold">Location:</span>{" "}
+                          <span className="text-gray-600">
+                            {profile.location}
+                          </span>
                         </p>
-                      )}
-                      {profile.phoneNumber && (
-                        <p
-                          className="text-gray-600 cursor-pointer hover:bg-gray-100 rounded p-1"
-                          onClick={() =>
-                            copyToClipboard(profile.phoneNumber, "Phone")
-                          }
-                        >
-                          <strong>Phone:</strong> {profile.phoneNumber}
-                          {copySuccess && copySuccess.includes("Phone") && (
-                            <span className="text-green-500 ml-2 text-sm">
-                              ✓ Copied!
-                            </span>
-                          )}
+                      </div>
+                    )}
+
+                    {profile.experience && (
+                      <div className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-50 transition-colors">
+                        <i className="fas fa-briefcase text-blue-500"></i>
+                        <p className="text-gray-700">
+                          <span className="font-semibold">Experience:</span>{" "}
+                          <span className="text-gray-600">
+                            {profile.experience} years
+                          </span>
                         </p>
-                      )}
-                    </div>
-                  )}
-                  {profile.businessName && (
-                    <p className="text-gray-600">
-                      <strong>Business:</strong> {profile.businessName}
-                    </p>
-                  )}
-                  {profile.availability && (
-                    <p className="text-gray-600">
-                      <strong>Availability:</strong> {profile.availability}
-                    </p>
-                  )}
+                      </div>
+                    )}
+
+                    {/* Contact Button */}
+                    <button
+                      onClick={() => setShowContact(!showContact)}
+                      className="w-full mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg
+        hover:bg-blue-600 active:bg-blue-700 transform hover:-translate-y-0.5
+        transition-all duration-200 font-medium flex items-center justify-center space-x-2"
+                    >
+                      <i
+                        className={`fas ${
+                          showContact ? "fa-eye-slash" : "fa-eye"
+                        }`}
+                      ></i>
+                      <span>
+                        {showContact
+                          ? "Hide Contact Info"
+                          : "Show Contact Info"}
+                      </span>
+                    </button>
+
+                    {/* Contact Information */}
+                    {showContact && (
+                      <div className="space-y-3 mt-4 p-4 bg-gray-50 rounded-lg border border-gray-100">
+                        {profile.email && (
+                          <div
+                            className="flex items-center space-x-2 p-3 rounded-lg bg-white
+              hover:bg-blue-50 cursor-pointer transition-all duration-200
+              border border-gray-100 hover:border-blue-200"
+                            onClick={() =>
+                              copyToClipboard(profile.email, "Email")
+                            }
+                          >
+                            <i className="fas fa-envelope text-blue-500"></i>
+                            <p className="text-gray-700 flex-grow">
+                              <span className="font-semibold">Email:</span>{" "}
+                              <span className="text-gray-600">
+                                {profile.email}
+                              </span>
+                            </p>
+                            {copySuccess && copySuccess.includes("Email") ? (
+                              <span className="text-green-500 text-sm flex items-center">
+                                <i className="fas fa-check mr-1"></i> Copied
+                              </span>
+                            ) : (
+                              <span className="hidden text-gray-400 text-sm">
+                                Click to copy
+                              </span>
+                            )}
+                          </div>
+                        )}
+
+                        {profile.phoneNumber && (
+                          <div
+                            className="flex items-center space-x-2 p-3 rounded-lg bg-white
+              hover:bg-blue-50 cursor-pointer transition-all duration-200
+              border border-gray-100 hover:border-blue-200"
+                            onClick={() =>
+                              copyToClipboard(profile.phoneNumber, "Phone")
+                            }
+                          >
+                            <i className="fas fa-phone text-blue-500"></i>
+                            <p className="text-gray-700 flex-grow">
+                              <span className="font-semibold">Phone:</span>{" "}
+                              <span className="text-gray-600">
+                                {profile.phoneNumber}
+                              </span>
+                            </p>
+                            {copySuccess && copySuccess.includes("Phone") ? (
+                              <span className="text-green-500 text-sm flex items-center">
+                                <i className="fas fa-check mr-1"></i> Copied
+                              </span>
+                            ) : (
+                              <span className="hidden text-gray-400 text-sm">
+                                Click to copy
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Business Details */}
+                    {profile.businessName && (
+                      <div className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-50 transition-colors">
+                        <i className="fas fa-building text-blue-500"></i>
+                        <p className="text-gray-700">
+                          <span className="font-semibold">Business:</span>{" "}
+                          <span className="text-gray-600">
+                            {profile.businessName}
+                          </span>
+                        </p>
+                      </div>
+                    )}
+
+                    {profile.availability && (
+                      <div className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-50 transition-colors">
+                        <i className="fas fa-clock text-blue-500"></i>
+                        <p className="text-gray-700">
+                          <span className="font-semibold">Availability:</span>{" "}
+                          <span className="text-gray-600">
+                            {profile.availability}
+                          </span>
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {profile.skills && profile.skills.length > 0 && (
@@ -334,32 +590,84 @@ const CategoryProfiles = () => {
                     </div>
                   </div>
                 )}
+                <div className="flex flex-col gap-3">
+                  <button
+                    onClick={() => handleContact(profile)}
+                    className={`group relative py-3 px-4 rounded-lg transition-all duration-200 flex items-center justify-center gap-3 shadow-sm ${
+                      profile.phoneNumber
+                        ? "bg-blue-500 text-white hover:bg-blue-600 hover:shadow-md"
+                        : "bg-gray-200 text-gray-500 cursor-not-allowed"
+                    }`}
+                    disabled={
+                      !profile.phoneNumber || isCallLoading[profile._id]
+                    }
+                  >
+                    <FaPhone
+                      className={`text-lg ${
+                        isCallLoading[profile._id] ? "animate-pulse" : ""
+                      }`}
+                    />
+                    <span className="font-medium">
+                      {isCallLoading[profile._id] ? (
+                        <div className="flex items-center gap-2">
+                          <span>Initiating Call</span>
+                          <span className="animate-pulse">...</span>
+                        </div>
+                      ) : profile.phoneNumber ? (
+                        "Call Professional"
+                      ) : (
+                        "No Phone Number Available"
+                      )}
+                    </span>
+                  </button>
 
-                <button
-                  onClick={() => handleContact(profile)}
-                  className={`mt-4 w-full py-2 px-4 rounded transition-colors flex items-center justify-center gap-2 ${
-                    profile.phoneNumber
-                      ? "bg-blue-500 text-white hover:bg-blue-600"
-                      : "bg-gray-300 text-gray-600 cursor-not-allowed"
-                  }`}
-                  disabled={!profile.phoneNumber || isCallLoading[profile._id]}
-                >
-                  {isCallLoading[profile._id] ? (
-                    <span>Initiating Call...</span>
-                  ) : (
-                    <>
-                      <FaPhone />
-                      {profile.phoneNumber
-                        ? "Call Professional"
-                        : "No Phone Number Available"}
-                    </>
-                  )}
-                </button>
+                  <button
+                    className={`group relative py-3 px-4 rounded-lg transition-all duration-200 flex items-center justify-center gap-3 shadow-sm ${
+                      isNotifying[profile._id]
+                        ? "bg-gray-400 cursor-wait"
+                        : "bg-blue-700 hover:bg-blue-800 hover:shadow-md"
+                    } text-white`}
+                    onClick={() => handleServiceRequest(profile)}
+                    disabled={isNotifying[profile._id]}
+                  >
+                    <FaBell
+                      className={`text-lg ${
+                        isNotifying[profile._id] ? "animate-pulse" : ""
+                      }`}
+                    />
+                    <span className="font-medium">
+                      {isNotifying[profile._id] ? (
+                        <div className="flex items-center gap-2">
+                          <span>Sending Request</span>
+                          <span className="animate-pulse">...</span>
+                        </div>
+                      ) : (
+                        "Request Service"
+                      )}
+                    </span>
+                  </button>
+                </div>
               </div>
             ))}
           </div>
         )}
       </div>
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+        toastClassName={() =>
+          "relative flex p-1 min-h-10 rounded-lg justify-between overflow-hidden cursor-pointer mb-4"
+        }
+        bodyClassName={() => "text-sm font-white font-medium block p-3"}
+      />
     </div>
   );
 };

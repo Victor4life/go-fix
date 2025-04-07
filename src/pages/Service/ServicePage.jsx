@@ -141,7 +141,7 @@ const ServicePage = () => {
     <div className="min-h-screen bg-gray-100 px-4 md:px-8 lg:px-16 xl:px-20 py-8">
       <div className="container mx-auto px-4 py-16">
         <div className="text-center mb-16">
-          <h1 className="text-4xl font-bold text-gray-800 mb-4">
+          <h1 className="text-3xl md:text-4xl font-extrabold text-blue-800 text-center mb-2 tracking-tight">
             Available Service Categories
           </h1>
           <p className="text-gray-600 text-lg max-w-2xl mx-auto">

@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const SignupForm = () => {
   const navigate = useNavigate();
@@ -41,7 +43,36 @@ const SignupForm = () => {
     const missingFields = requiredFields.filter((field) => !data[field]);
 
     if (missingFields.length > 0) {
-      console.log("Missing required fields:", missingFields);
+      toast.error(
+        <div className="flex items-center space-x-2">
+          <span className="text-lg">⚠️</span>
+          <div>
+            <p className="font-medium">Required fields missing</p>
+            <p className="text-sm opacity-90">
+              Please fill in all required fields
+            </p>
+          </div>
+        </div>,
+        {
+          position: "top-right",
+          autoClose: 4000,
+          className: "bg-red-500 text-white",
+        }
+      );
+      return false;
+    }
+    if (!data.profileImage) {
+      toast.error(
+        <div className="flex items-center space-x-2">
+          <span className="text-lg">⚠️</span>
+          <p className="font-medium">Profile image is required</p>
+        </div>,
+        {
+          position: "top-right",
+          autoClose: 4000,
+          className: "bg-red-500 text-white",
+        }
+      );
       return false;
     }
     return true;
@@ -64,6 +95,16 @@ const SignupForm = () => {
   const handleImageChange = async (e) => {
     const file = e.target.files[0];
     if (file) {
+      const loadingToastId = toast.loading(
+        <div className="flex items-center space-x-2">
+          <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+          <span>Uploading image...</span>
+        </div>,
+        {
+          position: "top-right",
+        }
+      );
+
       try {
         const formData = new FormData();
         formData.append("image", file);
@@ -92,9 +133,39 @@ const SignupForm = () => {
             profileImage: data.imageUrl,
           }));
           setImagePreview(data.imageUrl);
+
+          toast.update(loadingToastId, {
+            render: (
+              <div className="flex items-center space-x-2">
+                <span className="text-lg">✨</span>
+                <p className="font-medium">Image uploaded successfully</p>
+              </div>
+            ),
+            type: "success",
+            isLoading: false,
+            autoClose: 3000,
+            className: "bg-green-500 text-white",
+          });
         }
       } catch (error) {
         console.error("Upload error:", error);
+
+        toast.update(loadingToastId, {
+          render: (
+            <div className="flex items-center space-x-2">
+              <span className="text-lg">❌</span>
+              <div>
+                <p className="font-medium">Failed to upload image</p>
+                <p className="text-sm opacity-90">Please try again</p>
+              </div>
+            </div>
+          ),
+          type: "error",
+          isLoading: false,
+          autoClose: 4000,
+          className: "bg-red-500 text-white",
+        });
+
         setError("Failed to upload image. Please try again.");
       }
     }
@@ -105,11 +176,33 @@ const SignupForm = () => {
     setLoading(true);
     setError("");
 
+    // Show loading toast
+    const loadingToastId = toast.loading(
+      <div className="flex items-center space-x-2">
+        <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+        <span>Creating your account...</span>
+      </div>,
+      {
+        position: "top-right",
+      }
+    );
+
     try {
       // First check if passwords match
       if (formData.password !== formData.confirmPassword) {
+        toast.update(loadingToastId, {
+          render: (
+            <div className="flex items-center space-x-2">
+              <span className="text-lg">⚠️</span>
+              <p className="font-medium">Passwords do not match</p>
+            </div>
+          ),
+          type: "error",
+          isLoading: false,
+          autoClose: 4000,
+          className: "bg-red-500 text-white",
+        });
         setError("Passwords do not match");
-        setLoading(false);
         return;
       }
 
@@ -129,8 +222,19 @@ const SignupForm = () => {
 
       // Validate the data before sending
       if (!validateFormData(formDataToSend)) {
+        toast.update(loadingToastId, {
+          render: (
+            <div className="flex items-center space-x-2">
+              <span className="text-lg">⚠️</span>
+              <p className="font-medium">Please fill in all required fields</p>
+            </div>
+          ),
+          type: "error",
+          isLoading: false,
+          autoClose: 4000,
+          className: "bg-red-500 text-white",
+        });
         setError("Please fill in all required fields");
-        setLoading(false);
         return;
       }
 
@@ -148,6 +252,23 @@ const SignupForm = () => {
       console.log("Complete server response:", data);
 
       if (data.success === false && data.message === "User already exists") {
+        toast.update(loadingToastId, {
+          render: (
+            <div className="flex items-center space-x-2">
+              <span className="text-lg">⚠️</span>
+              <div>
+                <p className="font-medium">Account already exists</p>
+                <p className="text-sm opacity-90">
+                  Please use a different email
+                </p>
+              </div>
+            </div>
+          ),
+          type: "error",
+          isLoading: false,
+          autoClose: 4000,
+          className: "bg-red-500 text-white",
+        });
         setError(
           "An account with this email already exists. Please use a different email address."
         );
@@ -164,59 +285,68 @@ const SignupForm = () => {
 
       // If we get here, the signup was successful
       console.log("Signup successful, redirecting to login...");
-      navigate("/login");
+
+      toast.update(loadingToastId, {
+        render: (
+          <div className="flex items-center space-x-2">
+            <span className="text-lg">🎉</span>
+            <div>
+              <p className="font-medium">Account created successfully!</p>
+              <p className="text-sm opacity-90">Redirecting to login...</p>
+            </div>
+          </div>
+        ),
+        type: "success",
+        isLoading: false,
+        autoClose: 3000,
+        className: "bg-green-500 text-white",
+      });
+
+      // Wait for toast to be visible before redirecting
+      setTimeout(() => {
+        navigate("/login");
+      }, 2000);
     } catch (err) {
       console.error("Full error details:", {
         message: err.message,
         stack: err.stack,
       });
+
+      toast.update(loadingToastId, {
+        render: (
+          <div className="flex items-center space-x-2">
+            <span className="text-lg">❌</span>
+            <div>
+              <p className="font-medium">Failed to create account</p>
+              <p className="text-sm opacity-90">
+                {err.message || "Please try again"}
+              </p>
+            </div>
+          </div>
+        ),
+        type: "error",
+        isLoading: false,
+        autoClose: 4000,
+        className: "bg-red-500 text-white",
+      });
+
       setError(err.message || "Network error or server not responding");
     } finally {
       setLoading(false);
     }
   };
+
   return (
     <section className="min-h-screen relative flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      {/* Blob Background */}
-      <div
-        className="absolute top-0 left-0 w-[600px] h-[600px] -translate-x-1/4 -translate-y-1/4"
-        style={{
-          background: "rgba(0, 0, 255, 0.5)",
-          borderRadius: "60% 40% 30% 70% / 60% 30% 70% 40%",
-          animation: "blobAnimation 8s ease-in-out infinite",
-        }}
-      />
-
-      <div className="max-w-md w-full space-y-8">
+      <div className="w-full max-w-md bg-white px-8 py-12 shadow-lg rounded-lg">
         <div>
+          <h1 className="text-xl font-extrabold text-blue-800 text-center mb-2 tracking-tight">
+            Hello Artisan👋
+          </h1>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
             Create your service provider account
           </h2>
         </div>
-
-        {error && (
-          <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-md">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                {/* You can add an error icon here */}
-                <svg
-                  className="h-5 w-5 text-red-400"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <p className="text-sm text-red-700">{error}</p>
-              </div>
-            </div>
-          </div>
-        )}
 
         <form className="mt-8 space-y-4" onSubmit={handleSubmit}>
           <div className="rounded-md shadow-sm space-y-2">
@@ -446,12 +576,27 @@ const SignupForm = () => {
               onChange={handleChange}
             />
           </div>
-          {/* Profile Image Upload */}
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">
-              Profile Image
+          {/* Image upload section */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Profile Image <span className="text-red-500">*</span>
             </label>
-            <div className="mt-1 flex items-center space-x-4">
+            <div className="mt-1 flex items-center gap-4">
+              <input
+                type="file"
+                name="profileImage"
+                onChange={handleImageChange}
+                accept="image/*"
+                className="hidden"
+                id="imageUpload"
+                required
+              />
+              <label
+                htmlFor="imageUpload"
+                className="cursor-pointer inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+              >
+                Upload Photo
+              </label>
               {imagePreview && (
                 <div className="h-16 w-16 rounded-full overflow-hidden">
                   <img
@@ -461,17 +606,11 @@ const SignupForm = () => {
                   />
                 </div>
               )}
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageChange}
-                className="block w-full text-sm text-gray-500
-        file:mr-4 file:py-2 file:px-4
-        file:rounded-full file:border-0
-        file:text-sm file:font-semibold
-        file:bg-blue-50 file:text-blue-700
-        hover:file:bg-blue-100"
-              />
+              {!imagePreview && (
+                <p className="text-sm text-red-500">
+                  Please upload a profile image
+                </p>
+              )}
             </div>
           </div>
 
@@ -540,6 +679,26 @@ const SignupForm = () => {
             </a>
           </div>
         </form>
+      </div>
+      <div className="min-h-screen relative flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+        {/* Your existing JSX */}
+
+        <ToastContainer
+          position="top-right"
+          autoClose={5000}
+          hideProgressBar={false}
+          newestOnTop
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="light"
+          toastClassName={() =>
+            "relative flex p-1 min-h-10 rounded-lg justify-between overflow-hidden cursor-pointer mb-4"
+          }
+          bodyClassName={() => "text-sm font-white font-medium block p-3"}
+        />
       </div>
     </section>
   );

@@ -193,7 +193,7 @@ const Blog = () => {
 
           <div className="relative container mx-auto px-4">
             <div className="max-w-4xl mx-auto pt-8">
-              <h1 className="text-3xl md:text-4xl font-bold text-center mb-6 tracking-tight leading-tight">
+              <h1 className="text-3xl md:text-4xl font-extrabold text-blue-800 text-center mb-2 tracking-tight">
                 Our Blog
               </h1>
               <p className="text-center text-gray-600 text-lg md:text-xl mb-8 max-w-2xl mx-auto leading-relaxed">

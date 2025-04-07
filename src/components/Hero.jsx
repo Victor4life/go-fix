@@ -1,21 +1,57 @@
-import React from "react";
-
+import React, { useState } from "react";
+import { useAuth0 } from "@auth0/auth0-react";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 const Hero = () => {
+  const {
+    loginWithPopup,
+    isAuthenticated,
+    isLoading: authLoading,
+  } = useAuth0();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    setError(null);
+
+    try {
+      if (!isAuthenticated) {
+        setIsLoading(true);
+        await loginWithPopup();
+        setIsLoading(false);
+        return;
+      }
+
+      const formData = new FormData(e.target);
+      const searchData = {
+        address: formData.get("address"),
+        city: formData.get("city"),
+        category: formData.get("category"),
+      };
+
+      // Validate form data
+      if (!searchData.address || !searchData.city || !searchData.category) {
+        toast.error("Please fill in all fields");
+        return;
+      }
+
+      setIsLoading(true);
+      console.log("Search data:", searchData);
+      toast.success("Search successful!");
+      // Add your search implementation here
+    } catch (error) {
+      toast.error(error.message || "An error occurred. Please try again.");
+      setError(error.message || "An error occurred. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <section className="bg-white overflow-hidden relative pt-16">
       {/* Blob Background */}
-      <div
-        className="absolute top-0 left-0 w-[600px] h-[600px] -translate-x-1/4 -translate-y-1/4"
-        style={{
-          background:
-            "linear-gradient(135deg, rgba(0, 0, 255, 0.3), rgba(0, 0, 255, 0.7))",
-          borderRadius: "60% 40% 30% 70% / 60% 30% 70% 40%",
-          boxShadow:
-            "inset 10px 15px 30px rgba(0, 0, 255, 0.3), 5px 10px 15px rgba(0, 0, 255, 0.2)",
-          backdropFilter: "blur(8px)",
-        }}
-      />
-
       <div
         className="absolute bottom-0 right-0 w-[300px] h-[300px] translate-x-1/4 translate-y-1/4"
         style={{
@@ -39,6 +75,18 @@ const Hero = () => {
           animation: "blobsAnimation 8s infinite",
         }}
       />
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
       {/* Content Section */}
       <div className="flex flex-col lg:flex-row flex-1 justify-between mx-auto px-4 lg:px-14 py-8 lg:py-10 gap-8 relative">
         <div className="lg:w-1/2 xl:p-4">
@@ -55,21 +103,24 @@ const Hero = () => {
               className="w-10 h-10 absolute z-1 top-10 right-0 animate-float [animation-delay:2s]"
             />
           </div>
-          <h1 className="text-4xl lg:text-7xl font-bold text-black leading-tight">
+          <h1 className="text-4xl lg:text-7xl font-extrabold text-gray-900 leading-tight tracking-tight">
             Hire Experts and Get Your Job Done.
-          </h1>{" "}
+          </h1>
           <p className="text-gray-800 pt-8 text-lg leading-relaxed">
             Connect with skilled professionals and get your projects done
             efficiently. Our platform matches you with verified experts who can
             deliver quality results on time.
           </p>
-          <form className="flex flex-col md:flex-row flex-1 gap-4 p-4 rounded-md shadow-xl max-w-6xl mx-auto w-full">
+          <form
+            onSubmit={handleSearch}
+            className="flex flex-col md:flex-row flex-1 gap-4 p-4 rounded-md shadow-xl max-w-6xl mx-auto w-full"
+          >
             <input
               type="text"
               placeholder="Enter Your Address"
-              className="py-3 px-1 rounded-md flex-1 w-full md:w-auto border border-gray-200"
+              className="py-3 px-1 rounded-md flex-1 w-full md:w-auto border hover:border-blue-500 
+    focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 cursor-pointer"
             />
-
             <select
               name="city"
               className="p-3 text-base rounded-md w-full border border-gray-200 cursor-pointer
@@ -101,7 +152,6 @@ const Hero = () => {
               <option value="shomolu">Shomolu</option>
               <option value="surulere">Surulere</option>
             </select>
-
             <select
               name="category"
               className="p-3 text-base rounded-md w-full border border-gray-200 cursor-pointer
@@ -128,26 +178,113 @@ const Hero = () => {
               <option value="tailor">Tailor</option>
               <option value="tiler">Tiler</option>
             </select>
-
             <button
               type="submit"
-              className="p-3 rounded-md bg-blue-500 text-white hover:bg-blue-600 border-2 border-blue-400 w-full md:w-auto transition duration-300 ease-in-out transform hover:scale-105"
+              disabled={isLoading || authLoading}
+              className={`p-3 rounded-md bg-blue-500 text-white hover:bg-blue-600 border-2 border-blue-400 w-full md:w-auto transition duration-300 ease-in-out transform hover:scale-105 ${
+                isLoading || authLoading ? "opacity-50 cursor-not-allowed" : ""
+              }`}
             >
-              Search
-            </button>
+              {isLoading || authLoading ? (
+                <span className="flex items-center justify-center">
+                  <svg
+                    className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  Processing...
+                </span>
+              ) : (
+                "Search"
+              )}
+            </button>{" "}
           </form>
         </div>
 
         {/* Image Section */}
-        <div className="lg:w-1/2 xl:p-4">
-          <div className="relative">
-            <img
-              src="images/hero3.png"
-              alt="Professional experts at work"
-              className="w-full h-auto object-cover rounded-lg w-full h-full"
-              loading="lazy"
-            />
-            {/*Second Vector*/}
+        <div className="lg:w-1/2">
+          <div className="relative flex items-center justify-center h-full">
+            {/* Centered Lottie container */}
+            <div className="relative w-full min-h-[400px] flex items-center justify-center overflow-hidden">
+              {/* Main Animation Container */}
+              <div
+                className="relative w-[65%] aspect-square 
+    animate-float-slow transform-gpu hover:scale-105 transition-all duration-700
+    rounded-3xl p-8 hidden md:block"
+              >
+                {/* First Animation */}
+                {/*<div className="absolute inset-0 filter drop-shadow-2xl z-10 scale-110">
+                  <DotLottieReact
+                    src="https://lottie.host/faf02d8b-207c-4a38-b27a-ed061f68ae95/z8rDfCzgwP.lottie"
+                    loop
+                    autoplay
+                    className="w-full h-full translate-y-8 scale-90" // Added translation
+                    style={{
+                      filter: "drop-shadow(0 20px 30px rgba(0,0,0,0.15))",
+                    }}
+                  />
+                </div>*/}
+
+                {/* Second Animation */}
+                <div className="absolute inset-0 mix-blend-overlay opacity-90 z-20 scale-95">
+                  <DotLottieReact
+                    src="https://lottie.host/14886e02-c529-408a-abfd-34ce1991432f/vZI3uHTZVl.lottie"
+                    loop
+                    autoplay
+                    className="w-full h-full -translate-y-8 scale-105" // Added negative translation
+                  />
+                </div>
+
+                {/* Optional Glass Effect Background */}
+                <div className="absolute inset-0 bg-white/5 backdrop-blur-sm rounded-3xl z-0"></div>
+              </div>
+
+              {/* Floating Particles */}
+              <div className="absolute inset-0 pointer-events-none z-30">
+                {[...Array(5)].map((_, i) => (
+                  <div
+                    key={i}
+                    className="absolute w-2 h-2 bg-blue-400/20 rounded-full blur-sm"
+                    style={{
+                      top: `${Math.random() * 100}%`,
+                      left: `${Math.random() * 100}%`,
+                      animation: `float ${5 + i}s ease-in-out infinite`,
+                      animationDelay: `${i * 0.5}s`,
+                    }}
+                  ></div>
+                ))}
+              </div>
+
+              {/* Decorative Background Elements */}
+              <div className="absolute inset-0 z-0">
+                <div
+                  className="absolute top-1/4 left-1/4 w-32 h-32 bg-blue-200/20 
+      rounded-full blur-2xl animate-pulse"
+                ></div>
+                <div
+                  className="absolute bottom-1/4 right-1/4 w-32 h-32 bg-purple-200/20 
+      rounded-full blur-2xl animate-pulse"
+                  style={{ animationDelay: "1s" }}
+                ></div>
+              </div>
+            </div>
+
+            {/* Keep your vector decorations */}
             <img
               src="/images/hero-vector-3.png"
               alt=""
