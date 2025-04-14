@@ -63,7 +63,7 @@ const Portfolio = () => {
             </div>
             <div className="absolute z-0 overflow-hidden">
               <img
-                src="images/kite2.png"
+                src="/go-fix/images/kite2.png"
                 alt=""
                 className="object-cover w-full h-full opacity-1"
               />

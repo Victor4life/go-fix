@@ -98,7 +98,7 @@ const Services = () => {
     <section className="container mx-auto relative overflow-hidden py-16 px-4 bg-white">
       <div className="absolute left-[20%] z-0 overflow-hidden">
         <img
-          src="images/kite-bg.png"
+          src="/go-fix/images/kite-bg.png"
           alt=""
           className="object-cover w-full h-full opacity-1"
         />
