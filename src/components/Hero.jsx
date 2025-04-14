@@ -93,12 +93,12 @@ const Hero = () => {
           {/*Vector*/}
           <div className="relative w-full">
             <img
-              src="/images/hero-vector.png"
+              src="images/hero-vector.png"
               alt=""
               className="w-10 h-10 absolute z-1 left-0 -top-10 animate-float"
             />
             <img
-              src="/images/hero-vector-2.png"
+              src="images/hero-vector-2.png"
               alt=""
               className="w-10 h-10 absolute z-1 top-10 right-0 animate-float [animation-delay:2s]"
             />
@@ -291,7 +291,7 @@ const Hero = () => {
               className="w-10 h-10 absolute z-1 bottom-0 right-40 animate-float [animation-delay:4s]"
             />
             <img
-              src="/images/hero-vector-4.png"
+              src="images/hero-vector-4.png"
               alt=""
               className="w-10 md:w-20 h-2 absolute z-1 bottom-0 -left-10 animate-float [animation-delay:6s]"
             />
