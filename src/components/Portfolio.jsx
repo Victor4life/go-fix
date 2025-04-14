@@ -73,7 +73,7 @@ const Portfolio = () => {
           {/* Right Column - Image */}
           <div className="relative -space-y-12">
             <img
-              src="images/service_v3-1.png"
+              src="/go-fix/images/service_v3-1.png"
               alt="Professional experts at work"
               className="w-full object-contain"
               loading="lazy"

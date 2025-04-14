@@ -18,7 +18,7 @@ const Testimonial = () => {
       role: "Ikeja Resident",
       content:
         "I had an electrical emergency late in the evening, and their team responded within 30 minutes. The technician was professional and fixed the issue quickly. Excellent service!",
-      image: "images/hero3.png",
+      image: "/go-fix/images/hero3.png",
     },
     {
       id: 2,
@@ -26,7 +26,7 @@ const Testimonial = () => {
       role: "Ikotun Resident",
       content:
         "Very reliable and professional service. They installed my entire home's electrical system and did a fantastic job. Their attention to safety standards is impressive.",
-      image: "images/contact.png",
+      image: "/go-fix/images/contact.png",
     },
     {
       id: 3,
@@ -34,7 +34,7 @@ const Testimonial = () => {
       role: "Ajah Resident",
       content:
         "I've been using their maintenance service for my office complex for over a year now. Their team is always punctual, professional, and thorough with their work.",
-      image: "images/electrician.png",
+      image: "/go-fix/images/electrician.png",
     },
   ];
 
@@ -61,7 +61,7 @@ const Testimonial = () => {
               {/* Background decoration */}
               <div className="absolute top-0 right-0 -mr-16 -mt-16">
                 <img
-                  src="images/dots.png"
+                  src="/go-fix/images/dots.png"
                   alt=""
                   className="w-48 opacity-10 transform rotate-45"
                 />
