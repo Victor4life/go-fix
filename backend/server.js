@@ -24,7 +24,7 @@ const limiter = rateLimit({
 
 // Enhanced CORS configuration
 const corsOptions = {
-  origin: "http://localhost:5173",
+  origin: ["http://localhost:5173", "https://victor4life.github.io/go-fix/ "],
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
