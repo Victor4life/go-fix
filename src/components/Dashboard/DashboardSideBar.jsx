@@ -73,7 +73,7 @@ const DashboardSideBar = () => {
       </nav>
       <div className="mt-auto px-4 text-center">
         <img
-          src="/images/sidebar-img.png"
+          src="/go-fix/images/sidebar-img.png"
           alt="Sidebar Image"
           className="w-auto h-auto mx-auto opacity-100"
         />

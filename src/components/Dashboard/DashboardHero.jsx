@@ -64,7 +64,7 @@ const DashboardHero = ({ userData, isLoading }) => {
         <div className="w-full md:w-1/2 flex justify-center items-center">
           <div className="relative w-60 h-60">
             <img
-              src={userData.profileImage || "images/dashbord.png"}
+              src={userData.profileImage || "/go-fix/images/dashbord.png"}
               alt="Dashboard illustration"
               className="absolute inset-0 w-full h-full object-contain drop-shadow-xl"
             />
