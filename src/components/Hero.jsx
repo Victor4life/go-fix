@@ -88,7 +88,7 @@ const Hero = () => {
         theme="light"
       />
       {/* Content Section */}
-      <div className="flex flex-col lg:flex-row flex-1 justify-between mx-auto px-4 lg:px-14 py-8 lg:py-10 gap-8 relative">
+      <div className="flex flex-col lg:flex-row flex-1 justify-between mx-auto px-4 lg:px-14 py-6 lg:py-10 gap-8 relative">
         <div className="lg:w-1/2 xl:p-4">
           {/*Vector*/}
           <div className="relative w-full md:block hidden">
@@ -103,10 +103,10 @@ const Hero = () => {
               className="w-10 h-10 absolute z-1 top-10 right-0 animate-float [animation-delay:2s]"
             />
           </div>
-          <h1 className="text-5xl lg:text-7xl font-extrabold text-blue-800 md:text-gray-900 leading-tight tracking-tight">
+          <h1 className="text-5xl lg:text-7xl font-extrabold text-blue-900 md:text-gray-900 leading-tight tracking-tight">
             Hire Experts and Get Your Job Done.
           </h1>
-          <p className="text-gray-800 pt-8 text-sm md:text-lg leading-relaxed">
+          <p className="text-gray-800 pt-4 md:pt-8 text-sm md:text-lg leading-relaxed">
             Connect with skilled professionals and get your projects done
             efficiently. Our platform matches you with verified experts who can
             deliver quality results on time.
