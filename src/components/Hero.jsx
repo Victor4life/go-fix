@@ -104,12 +104,12 @@ const Hero = () => {
             />
           </div>
           <div className="flex justify-center">
-            <p className="inline-block text-md bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg px-4 border border-blue-200 md:hidden">
+            <p className="inline-block text-md bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg px-4 py-2 border border-blue-200 md:hidden">
               <span className="font-bold text-blue-500">#1</span>
               <span className="text-gray-700"> Artisan Finder</span>
             </p>
           </div>
-          <h1 className="text-center md:text-left text-4xl sm:text-5xl lg:text-7xl font-extrabold text-gray-900 leading-tight tracking-tight">
+          <h1 className="text-center md:text-left text-5xl sm:text-5xl lg:text-7xl font-extrabold text-gray-900 leading-tight tracking-tight">
             Hire{" "}
             <span className="bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent">
               Experts
@@ -132,7 +132,7 @@ const Hero = () => {
             onSubmit={handleSearch}
             className="flex flex-col md:flex-row flex-1 gap-4 p-4 rounded-md 
     bg-white md:bg-transparent 
-    shadow-xl mx-4 md:mx-0 max-w-6xl md:mx-auto w-[calc(100%-32px)] md:w-full
+    shadow-xl mx-4 md:mx-0 max-w-6xl md:mx-auto w-[calc(100%-28px)] md:w-full
     transition-all duration-300 ease-in-out"
           >
             <input
