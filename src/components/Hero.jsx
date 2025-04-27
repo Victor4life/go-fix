@@ -50,10 +50,10 @@ const Hero = () => {
   };
 
   return (
-    <section className="bg-white overflow-hidden relative pt-16">
+    <section className="bg-blue-50 md:bg-white overflow-hidden relative pt-16">
       {/* Blob Background */}
       <div
-        className="absolute bottom-0 right-0 w-[300px] h-[300px] translate-x-1/4 translate-y-1/4"
+        className="absolute hidden md:block lg:block bottom-0 right-0 w-[300px] h-[300px] translate-x-1/4 translate-y-1/4"
         style={{
           background:
             "linear-gradient(135deg, rgba(0, 0, 255, 0.7), rgba(0, 0, 255, 0.3))",
@@ -103,17 +103,37 @@ const Hero = () => {
               className="w-10 h-10 absolute z-1 top-10 right-0 animate-float [animation-delay:2s]"
             />
           </div>
-          <h1 className="text-5xl lg:text-7xl font-extrabold text-blue-900 md:text-gray-900 leading-tight tracking-tight">
-            Hire Experts and Get Your Job Done.
-          </h1>
-          <p className="text-gray-800 pt-4 md:pt-8 text-sm md:text-lg leading-relaxed">
+          <div className="flex justify-center">
+            <p className="inline-block text-md bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg px-4 border border-blue-200 md:hidden">
+              <span className="font-bold text-blue-500">#1</span>
+              <span className="text-gray-700"> Artisan Finder</span>
+            </p>
+          </div>
+          <h1 className="text-center md:text-left text-4xl sm:text-5xl lg:text-7xl font-extrabold text-gray-900 leading-tight tracking-tight">
+            Hire{" "}
+            <span className="bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent">
+              Experts
+            </span>{" "}
+            and Get Your Job Done.
+          </h1>{" "}
+          <p className="md:hidden text-md font-semibold flex justify-center items-center gap-3 py-4">
+            <span className="text-blue-600 transition-colors">Search</span>
+            <span className="text-gray-400">•</span>
+            <span className="text-blue-600 transition-colors">Find</span>
+            <span className="text-gray-400">•</span>
+            <span className="text-blue-600 transition-colors">Call</span>
+          </p>
+          <p className="hidden md:block text-gray-800 pt-4 md:pt-8 text-sm md:text-lg leading-relaxed">
             Connect with skilled professionals and get your projects done
             efficiently. Our platform matches you with verified experts who can
             deliver quality results on time.
           </p>
           <form
             onSubmit={handleSearch}
-            className="flex flex-col md:flex-row flex-1 gap-4 p-4 rounded-md shadow-xl max-w-6xl mx-auto w-full"
+            className="flex flex-col md:flex-row flex-1 gap-4 p-4 rounded-md 
+    bg-white md:bg-transparent 
+    shadow-xl mx-4 md:mx-0 max-w-6xl md:mx-auto w-full
+    transition-all duration-300 ease-in-out"
           >
             <input
               type="text"
@@ -217,7 +237,7 @@ const Hero = () => {
         </div>
 
         {/* Image Section */}
-        <div className="lg:w-1/2">
+        <div className="lg:w-1/2 hidden lg:block md:block">
           <div className="relative flex items-center justify-center h-full">
             {/* Centered Lottie container */}
             <div className="relative w-full min-h-[400px] flex items-center justify-center overflow-hidden">

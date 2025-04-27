@@ -55,7 +55,7 @@ const LoginForm = () => {
   return (
     <section className="overflow-hidden relative">
       <ToastContainer />
-      <div className="flex min-h-screen items-center justify-center px-4 py-12 sm:px-6 lg:px-20">
+      <div className="flex bg-gray-100 min-h-screen items-center justify-center px-4 py-12 sm:px-6 lg:px-20">
         <div className="w-full max-w-md">
           <div className="bg-white px-8 py-12 shadow-lg rounded-lg">
             <h1 className="text-xl font-extrabold text-blue-800 text-center mb-2 tracking-tight">
