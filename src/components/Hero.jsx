@@ -119,7 +119,7 @@ const Hero = () => {
             />
           </div>
           <div className="flex justify-center">
-            <p className="inline-block text-md bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg px-4 py-1 border border-blue-200 my-2 md:my-0 md:hidden">
+            <p className="inline-block text-md bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg px-4 py-1 border border-blue-200 mb-2 md:mb-0 md:hidden">
               <span className="font-bold text-blue-500">#1</span>
               <span className="text-gray-700"> Artisan Finder</span>
             </p>
