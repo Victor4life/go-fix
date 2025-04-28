@@ -11,7 +11,7 @@ const Cta = () => {
 
   return (
     <div className="relative bg-blue-800 bg-blend-overlay bg-cover bg-center bg-no-repeat min-h-[200px] p-5">
-      <div className="absolute -top-10 right-10">
+      {/*<div className="absolute -top-10 right-10">
         <img
           src="images/cta.png"
           alt="CTA decoration"
@@ -25,7 +25,7 @@ const Cta = () => {
           alt="CTA decoration"
           className="max-w-[200px] h-auto"
         />
-      </div>
+      </div>*/}
 
       <div className="flex flex-1 items-center justify-center gap-8 min-h-[200px]">
         <h2 className="text-2xl font-bold text-white">
