@@ -152,7 +152,7 @@ const Hero = () => {
           </p>
           <form
             onSubmit={handleSearch}
-            className="flex flex-col md:flex-row flex-1 gap-4 p-4 rounded-md 
+            className="flex flex-col md:flex-row flex-1 gap-4 md:p-4 p-6 rounded-md 
     bg-white md:bg-transparent 
     shadow-xl mx-4 md:mx-0 max-w-6xl md:mx-auto w-[calc(100%-28px)] md:w-full
     transition-all duration-300 ease-in-out"
