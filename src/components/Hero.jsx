@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -48,6 +48,21 @@ const Hero = () => {
       setIsLoading(false);
     }
   };
+
+  const [text, setText] = useState("Experts");
+  const [isVisible, setIsVisible] = useState(true);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setIsVisible(false);
+      setTimeout(() => {
+        setText((current) => (current === "Experts" ? "Artisan" : "Experts"));
+        setIsVisible(true);
+      }, 500);
+    }, 4000); // Complete cycle every 4 seconds
+
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <section className="bg-blue-50 md:bg-white overflow-hidden relative pt-16">
@@ -104,15 +119,22 @@ const Hero = () => {
             />
           </div>
           <div className="flex justify-center">
-            <p className="inline-block text-md bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg px-4 py-2 border border-blue-200 my-2 md:my-0 md:hidden">
+            <p className="inline-block text-md bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg px-4 py-1 border border-blue-200 my-2 md:my-0 md:hidden">
               <span className="font-bold text-blue-500">#1</span>
               <span className="text-gray-700"> Artisan Finder</span>
             </p>
           </div>
           <h1 className="text-center md:text-left text-5xl sm:text-5xl lg:text-7xl font-extrabold text-gray-900 leading-tight tracking-tight">
             Hire{" "}
-            <span className="bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent">
-              Experts
+            <span
+              className={`
+        bg-gradient-to-r from-blue-600 to-blue-400 
+        bg-clip-text text-transparent 
+        transition-opacity duration-500
+        ${isVisible ? "opacity-100" : "opacity-0"}
+      `}
+            >
+              {text}
             </span>{" "}
             and Get Your Job Done.
           </h1>{" "}
